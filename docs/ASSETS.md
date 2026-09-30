@@ -1,6 +1,6 @@
 # Included artwork
 
-These PNG files are referenced by the current app. Unused source artwork and drafts are not included.
+These PNG files are referenced by the current Ø-CREW prototype. Unused source artwork, drafts, and working files are not included.
 
 | File | Size (KiB) |
 | --- | ---: |
@@ -41,4 +41,23 @@ These PNG files are referenced by the current app. Unused source artwork and dra
 | PIGGO_09_rest.png | 1791 |
 | PIGGØ.png | 1772 |
 
-Artwork is included for displaying the prototype; no separate artwork licence has been selected.
+## Rights and reuse
+
+The Ø-CREW character names, character designs, visual identities, artwork, animation frames, and other original visual assets are proprietary project materials.
+
+They are included in this public repository only so the prototype can be viewed and demonstrated.
+
+No permission is granted to:
+
+- reuse the characters or artwork in another project;
+- redistribute the original image files;
+- modify and republish the artwork;
+- create or distribute derivative character assets;
+- use the character names or visual identities for commercial products;
+- sell, sublicense, monetise, or otherwise commercially exploit the included artwork.
+
+Public availability does not constitute an artwork licence.
+
+Third-party tools, libraries, models, and software retain their own respective licences and terms.
+
+See [LICENSE](../LICENSE) for the repository-wide rights notice.
