@@ -1,0 +1,38 @@
+# Dependencies and build outputs
+node_modules/
+dist/
+out/
+release/
+coverage/
+*.log
+*.zip
+*.exe
+*.msi
+
+# Credentials and machine-local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.npmrc
+
+# Runtime state and personal memory exports
+userData/
+Local Storage/
+Session Storage/
+logs/
+memory*.json
+chat-history*.json
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# Working copies and backups
+*.bak
+*.tmp
+index.before-*.html

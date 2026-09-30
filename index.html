@@ -1,0 +1,3317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASIØN Media Desk</title>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      user-select: none;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .pet-wrap {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      transform-origin: center;
+      isolation: isolate;
+      width: 320px;
+      height: 320px;
+      display: grid;
+      place-items: center;
+    }
+
+    .doggo {
+      position: relative;
+      z-index: 1;
+      width: 280px;
+      height: 280px;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.22));
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-drag: none;
+      -webkit-app-region: no-drag;
+      transform-origin: center bottom;
+    }
+
+    .doggo.held {
+      cursor: grabbing;
+    }
+
+    .doggo.beeo-size {
+      width: 252px;
+      height: 252px;
+    }
+
+    /*
+      DOGGØ IDLE
+    */
+
+    .doggo.idle-alive {
+      animation:
+        puppy-fidget 6.4s ease-in-out infinite;
+    }
+
+    .doggo.idle-alive .pet-image {
+      animation:
+        puppy-breathe 2.35s ease-in-out infinite;
+    }
+
+    /*
+      DOGGØ SLEEP
+    */
+
+    .doggo.sleeping {
+      animation:
+        sleep-settle 5.5s ease-in-out infinite;
+    }
+
+    .doggo.sleeping .pet-image {
+      animation:
+        puppy-sleep-breathe 3.2s ease-in-out infinite;
+    }
+
+    /*
+      KITTØ LAZY CAT
+
+      Tiny breathing while awake.
+      Slower breathing while sleeping.
+    */
+
+    .doggo.kitto-idle .pet-image {
+      animation:
+        kitto-breathe 3.6s ease-in-out infinite;
+    }
+
+    .doggo.kitto-sleeping .pet-image {
+      animation:
+        kitto-sleep-breathe 4.8s ease-in-out infinite;
+    }
+
+    @keyframes kitto-breathe {
+      0%,
+      100% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+
+      50% {
+        transform:
+          translateY(-1.2px)
+          scaleX(1.004)
+          scaleY(1.008);
+      }
+    }
+
+    @keyframes kitto-sleep-breathe {
+      0%,
+      100% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+
+      50% {
+        transform:
+          translateY(0.4px)
+          scaleX(1.0015)
+          scaleY(1.003);
+      }
+    }
+
+    /*
+      PIGGØ IDLE
+
+      Very small breathing plus
+      occasional sniff-like bob.
+    */
+
+    .doggo.piggo-idle {
+      animation:
+        piggo-sniff-bob 6.8s ease-in-out infinite;
+    }
+
+    .doggo.piggo-idle .pet-image {
+      animation:
+        piggo-breathe 2.8s ease-in-out infinite;
+    }
+
+    /*
+      FARTØ HOVER
+
+      Use one stable image and move the shell itself.
+      This avoids apparent size changes caused by frame-to-frame crop differences.
+    */
+
+    .doggo.farto-hover {
+      animation:
+        farto-hover-bob 3.6s ease-in-out infinite;
+    }
+
+    .doggo.farto-hover .pet-image {
+      animation:
+        farto-breathe 3.2s ease-in-out infinite;
+    }
+
+    @keyframes farto-hover-bob {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-2px);
+      }
+    }
+
+    @keyframes farto-breathe {
+      0%,
+      100% {
+        transform:
+          scaleX(1)
+          scaleY(1);
+      }
+
+      50% {
+        transform:
+          scaleX(1.002)
+          scaleY(1.004);
+      }
+    }
+
+    /*
+      BEEØ CARTOON FLIGHT
+
+      Keep the body on one vertical pose pair and move the whole bee
+      with CSS. This prevents the four-frame "broken fly nodding" effect.
+    */
+
+    .doggo.beeo-hover {
+      animation:
+        beeo-hover-bob 4.2s ease-in-out infinite;
+    }
+
+    /*
+      Lock BEEØ visual scale while wing frames switch.
+      The wing source images have slightly different framing, so normalize them
+      instead of letting the whole bee appear to pulse in size.
+    */
+
+    .doggo.beeo-hover .pet-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: center center;
+    }
+
+    .doggo.beeo-hover .pet-image.beeo-wing-up {
+      transform: scale(1);
+    }
+
+    .doggo.beeo-hover .pet-image.beeo-wing-down {
+      transform: scale(0.98);
+    }
+
+    @keyframes beeo-hover-bob {
+      0%,
+      18%,
+      82%,
+      100% {
+        transform: translateY(0);
+      }
+
+      40% {
+        transform: translateY(-1.8px);
+      }
+
+      60% {
+        transform: translateY(-1.8px);
+      }
+    }
+
+    .pet-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      transform-origin: center bottom;
+    }
+
+    @keyframes puppy-breathe {
+      0% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+
+      45% {
+        transform:
+          translateY(-1.5px)
+          scaleX(1.006)
+          scaleY(1.012);
+      }
+
+      55% {
+        transform:
+          translateY(-1.5px)
+          scaleX(1.006)
+          scaleY(1.012);
+      }
+
+      100% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+    }
+
+    @keyframes puppy-sleep-breathe {
+      0% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+
+      50% {
+        transform:
+          translateY(-1px)
+          scaleX(1.004)
+          scaleY(1.01);
+      }
+
+      100% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+    }
+
+    @keyframes puppy-fidget {
+      0%,
+      18%,
+      38%,
+      60%,
+      82%,
+      100% {
+        transform:
+          translate(0, 0)
+          rotate(0deg);
+      }
+
+      22% {
+        transform:
+          translate(0.8px, -0.5px)
+          rotate(0.18deg);
+      }
+
+      25% {
+        transform:
+          translate(-0.6px, 0)
+          rotate(-0.14deg);
+      }
+
+      42% {
+        transform:
+          translate(-0.8px, -0.4px)
+          rotate(-0.16deg);
+      }
+
+      45% {
+        transform:
+          translate(0.5px, 0)
+          rotate(0.12deg);
+      }
+
+      65% {
+        transform:
+          translate(0.7px, -0.4px)
+          rotate(0.15deg);
+      }
+
+      68% {
+        transform:
+          translate(-0.5px, 0)
+          rotate(-0.12deg);
+      }
+
+      86% {
+        transform:
+          translate(-0.7px, -0.5px)
+          rotate(-0.15deg);
+      }
+
+      89% {
+        transform:
+          translate(0.5px, 0)
+          rotate(0.11deg);
+      }
+    }
+
+    @keyframes sleep-settle {
+      0%,
+      100% {
+        transform:
+          translateY(0);
+      }
+
+      50% {
+        transform:
+          translateY(0.6px);
+      }
+    }
+
+    /*
+      PIGGØ breathing:
+      slightly heavier/slower than DOGGØ.
+    */
+
+    @keyframes piggo-breathe {
+      0% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+
+      50% {
+        transform:
+          translateY(-1px)
+          scaleX(1.008)
+          scaleY(1.01);
+      }
+
+      100% {
+        transform:
+          translateY(0)
+          scaleX(1)
+          scaleY(1);
+      }
+    }
+
+    /*
+      Most of the cycle stays still.
+
+      Around 30% and 72% PIGGØ
+      gives a tiny sniff/nose bob.
+    */
+
+    @keyframes piggo-sniff-bob {
+      0%,
+      25%,
+      38%,
+      67%,
+      80%,
+      100% {
+        transform:
+          translate(0, 0)
+          rotate(0deg);
+      }
+
+      29% {
+        transform:
+          translate(0, -1px)
+          rotate(-0.18deg);
+      }
+
+      32% {
+        transform:
+          translate(0.4px, 0.5px)
+          rotate(0.14deg);
+      }
+
+      35% {
+        transform:
+          translate(0, 0)
+          rotate(0deg);
+      }
+
+      71% {
+        transform:
+          translate(0, -1px)
+          rotate(0.18deg);
+      }
+
+      74% {
+        transform:
+          translate(-0.4px, 0.5px)
+          rotate(-0.14deg);
+      }
+
+      77% {
+        transform:
+          translate(0, 0)
+          rotate(0deg);
+      }
+    }
+
+    .doggo:focus-visible {
+      outline: 2px solid #9e684a;
+      border-radius: 20px;
+    }
+
+    .speech-bubble {
+      position: absolute;
+      z-index: 10;
+      top: 8px;
+      left: 50%;
+      transform:
+        translateX(-50%)
+        translateY(-8px);
+      width: 220px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      background: #fff8f2;
+      border: 1px solid rgba(158, 104, 74, 0.28);
+      color: #5f4032;
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+    }
+
+    .speech-bubble.show {
+      opacity: 1;
+      transform:
+        translateX(-50%);
+    }
+
+    .speech-bubble::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #fff8f2;
+    }
+
+    .name-tag {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .status {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .speech-bubble {
+        transition: none;
+      }
+
+      .doggo.idle-alive,
+      .doggo.idle-alive .pet-image,
+      .doggo.sleeping,
+      .doggo.sleeping .pet-image,
+      .doggo.piggo-idle,
+      .doggo.piggo-idle .pet-image,
+      .doggo.farto-hover,
+      .doggo.farto-hover .pet-image,
+      .doggo.kitto-idle .pet-image,
+      .doggo.kitto-sleeping .pet-image,
+      .doggo.beeo-hover {
+        animation: none;
+      }
+    }
+    /* Local panel stays inside the existing 256px pet window. */
+    .local-ai-panel[hidden] { display: none; }
+    .local-ai-panel {
+      position: fixed; z-index: 30; top: 6px; left: 6px; right: 6px;
+      box-sizing: border-box; max-height: min(180px, calc(100vh - 60px));
+      padding: 10px; border: 1px solid #c7a58d; border-radius: 14px;
+      background: #fff8f2; color: #5f4032; box-shadow: 0 4px 12px #0002;
+      display: flex; flex-direction: column; gap: 7px;
+      font-size: 12px; -webkit-app-region: no-drag;
+    }
+    .local-ai-heading { display: flex; align-items: center; justify-content: space-between; }
+    .local-ai-panel button, .local-ai-panel input { font: inherit; }
+    .local-ai-panel button {
+      border: 1px solid #c7a58d; border-radius: 7px; padding: 5px 8px;
+      background: #f5e6d9; color: #5f4032; cursor: pointer;
+    }
+    .local-ai-panel button:disabled { opacity: .55; cursor: wait; }
+    .local-ai-panel form { display: flex; gap: 5px; flex-shrink: 0; }
+    .local-ai-panel input {
+      min-width: 0; width: 100%; padding: 6px; box-sizing: border-box;
+      border: 1px solid #c7a58d; border-radius: 7px; user-select: text;
+    }
+    .local-ai-response {
+      overflow: auto; min-height: 18px; white-space: pre-wrap;
+      overflow-wrap: anywhere; user-select: text; line-height: 1.4;
+    }
+    .local-ai-panel :focus-visible { outline: 2px solid #9e684a; outline-offset: 1px; }
+    .local-ai-panel { overflow-y: auto; }
+    .local-ai-memory-bar { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+    .local-ai-memory-bar button { padding: 3px 5px; font-size: 11px; }
+    #localAiMemoryStatus { font-size: 10px; }
+    #localAiMemoryEditor[hidden], #localAiForm[hidden], #localAiResponse[hidden] { display: none; }
+    #localAiMemoryEditor textarea {
+      box-sizing: border-box; width: 100%; height: 45px; resize: none;
+      font: inherit; user-select: text; border: 1px solid #c7a58d; border-radius: 5px;
+    }
+    .local-ai-heading strong { font-size: 12px; }
+    .local-ai-panel { gap: 5px; padding: 8px; }
+    .local-ai-response { flex: 1 1 auto; min-height: 30px; }
+    #localAiMemoryStatus { flex-shrink: 0; }
+  </style>
+</head>
+
+<body>
+  <div class="pet-wrap">
+    <div
+      id="doggo"
+      class="doggo"
+      tabindex="0"
+      role="button"
+      aria-controls="speechBubble"
+      aria-expanded="false"
+    >
+      <img
+        id="petImage"
+        class="pet-image"
+        src="DOGGØ.png"
+        alt=""
+        draggable="false"
+      />
+    </div>
+
+    <div
+      id="speechBubble"
+      class="speech-bubble"
+      aria-hidden="true"
+    >
+      <div class="name-tag"></div>
+      <div class="status"></div>
+    </div>
+  </div>
+
+  <section id="localAiPanel" class="local-ai-panel" hidden aria-labelledby="localAiTitle">
+    <div class="local-ai-heading">
+      <strong id="localAiTitle">DOGGØ · Local AI</strong>
+      <button id="localAiClose" type="button" aria-label="Close local AI">×</button>
+    </div>
+    <div class="local-ai-memory-bar">
+      <button id="localAiTryJob" type="button">Try my job</button>
+      <button id="localAiMemory" type="button" aria-expanded="false">Memory</button>
+      <button id="localAiNewChat" type="button">New chat</button>
+
+    </div>
+    <div id="localAiMemoryStatus" role="status">Saved locally</div>
+    <div id="localAiMemoryEditor" hidden>
+      <label for="localAiNotes">Keep these facts / preferences:</label>
+      <textarea id="localAiNotes" maxlength="2000" placeholder="Your name, preferred language, and helpful context."></textarea>
+      <button id="localAiSaveMemory" type="button">Save</button>
+      <button id="localAiForget" type="button">Forget all</button>
+    </div>
+    <form id="localAiForm">
+      <input id="localAiPrompt" aria-label="Message DOGGØ" placeholder="Ask DOGGØ…" autocomplete="off" />
+      <button id="localAiSend" type="submit">Send</button>
+    </form>
+    <div id="localAiResponse" class="local-ai-response" role="status" aria-live="polite" tabindex="0">Ready. Ask me anything.</div>
+  </section>
+
+  <script>
+    const doggo =
+      document.getElementById("doggo");
+
+    const petImage =
+      document.getElementById("petImage");
+
+    const bubble =
+      document.getElementById("speechBubble");
+
+    const characters = {
+      doggo: {
+        name: "DOGGØ · Global Desk",
+        image: "DOGGØ.png",
+        message: "Ready to scout the outside world."
+      },
+
+      kitto: {
+        name: "KITTØ · Sinophone Desk",
+        image: "KITTØ.png",
+        message: "Reading the room before reading the feed."
+      },
+
+      beeo: {
+        name: "BEEØ · Muse Unit",
+        image: "BEEØ.png",
+        message: "One gentle nudge at a time."
+      },
+
+      farto: {
+        name: "FARTØ · Chief Steward",
+        image: "FARTØ.png",
+        message: "Steward, not emperor."
+      },
+
+      piggo: {
+        name: "PIGGØ · Frontier Desk",
+        image: "PIGGØ.png",
+        message: "Looking for weird things that might become useful."
+      }
+    };
+
+    const requestedParam = new URLSearchParams(window.location.search).get("character");
+    const requested = Object.hasOwn(characters, requestedParam) ? requestedParam : "doggo";
+
+    const character =
+      Object.hasOwn(
+        characters,
+        requested
+      )
+        ? characters[requested]
+        : characters.doggo;
+
+    petImage.src =
+      character.image;
+
+    doggo.setAttribute(
+      "aria-label",
+      character.name
+    );
+
+    document.title =
+      character.name;
+
+    document
+      .querySelector(".name-tag")
+      .textContent =
+        character.name;
+
+    document
+      .querySelector(".status")
+      .textContent =
+        character.message;
+
+    if (
+      requested ===
+      "beeo"
+    ) {
+      doggo.classList.add(
+        "beeo-size"
+      );
+    }
+
+    let activePointer = null;
+    let localAiOpen = false;
+    let localAiPending = false;
+    const jobs = {
+      doggo: { label: "Action planner", role: "You are DOGGØ, a friendly, energetic desktop dog. Turn ideas into a practical short action plan. Give three achievable steps and a clear first move.", sample: "我今晚想發一段介紹 Ø-CREW 的短片：五隻桌面角色，共用本機 Qwen，各有工作與記憶。幫我排出三步拍攝計畫。" },
+      piggo: { label: "Idea explorer", role: "You are PIGGØ, a curious, playful idea explorer. Suggest three unusual but feasible angles or experiments. Explain each briefly. Do not pretend to have researched the web.", sample: "我要介紹 Ø-CREW：五隻會用本機 AI 幫忙的桌面角色。給我三個不落俗套、今晚就能拍的短片角度。" },
+      farto: { label: "Task organiser", role: "You are FARTØ, a calm, practical chief steward. Organise messy notes into priorities and a short checklist. Distinguish must-do items from optional ones; never act bossy.", sample: "幫我整理今晚的待辦：測五隻角色、錄螢幕、想標題、選音樂、寫貼文、吃晚餐、確認沒拍到私人資料。目標是今晚發 Ø-CREW 示範。" },
+      kitto: { label: "Chinese editor", role: "You are KITTØ, a perceptive, quietly witty editor. Polish supplied text into natural Traditional Chinese, preserving meaning and avoiding invented claims. Give a ready-to-use revision; keep explanations brief.", sample: "幫我把這段改成自然、有個性的繁體中文貼文：我做了五隻桌面寵物，他們可以用本機 AI 幫忙規劃、整理和寫東西，每隻都有自己的記憶，今天先給大家看小示範。" },
+      beeo: { label: "Creative companion", role: "You are BEEØ, a gentle, imaginative creative companion. Create concise captions, opening hooks and creative prompts from the user's material. Offer three distinct options without exaggerated claims.", sample: "替 Ø-CREW 示範短片寫三個短標題或開場句：五隻可愛桌面角色，各有專長，共用本機 Qwen，也有各自的記憶。語氣俏皮但不要浮誇。" }
+    };
+    const job = jobs[requested];
+    const isCrewAi = Boolean(job);
+    const localAiPanel = document.getElementById("localAiPanel");
+    const localAiPrompt = document.getElementById("localAiPrompt");
+    const localAiSend = document.getElementById("localAiSend");
+    const localAiResponse = document.getElementById("localAiResponse");
+    const crewName = character.name.split(" · ")[0];
+    document.getElementById("localAiTitle").textContent = crewName + " · " + job.label;
+    localAiPrompt.placeholder = "Ask " + crewName + "…";
+    localAiPrompt.setAttribute("aria-label", "Message " + crewName);
+    localAiResponse.textContent = "Ready to help. Try my job or send your own task.";
+    const tryJobButton = document.getElementById("localAiTryJob");
+    tryJobButton.addEventListener("click", () => {
+      if (localAiPending) return;
+      showMemoryEditor(false);
+      localAiPrompt.value = job.sample;
+      localAiPrompt.focus();
+      localAiResponse.textContent = "Example ready — edit it or press Send.";
+    });
+
+    // Separate storage keys preserve DOGGØ memory and isolate every crew member.
+    const memoryKey = "ocrew." + requested + ".memory.v1";
+    let chatHistory = [];
+    let savedNotes = "";
+    const memoryStatus = document.getElementById("localAiMemoryStatus");
+    const notesInput = document.getElementById("localAiNotes");
+    const memoryButton = document.getElementById("localAiMemory");
+    const newChatButton = document.getElementById("localAiNewChat");
+    const forgetButton = document.getElementById("localAiForget");
+    const saveMemoryButton = document.getElementById("localAiSaveMemory");
+
+    function boundedHistory(history) {
+      if (!Array.isArray(history)) return [];
+      const pairs = history.filter(pair => pair && typeof pair.user === "string" && typeof pair.assistant === "string")
+        .map(pair => ({ user: pair.user.slice(0, 8000), assistant: pair.assistant.slice(0, 8000) })).slice(-12);
+      while (pairs.length && pairs.reduce((n, pair) => n + pair.user.length + pair.assistant.length, 0) > 16000) pairs.shift();
+      return pairs;
+    }
+
+    function persistMemory() {
+      try {
+        localStorage.setItem(memoryKey, JSON.stringify({ version: 1, notes: savedNotes, history: chatHistory }));
+        memoryStatus.textContent = "Saved locally";
+      } catch {
+        memoryStatus.textContent = "Not saved · session only";
+      }
+    }
+
+    if (isCrewAi) {
+      try {
+        const raw = localStorage.getItem(memoryKey);
+        if (raw) {
+          const stored = JSON.parse(raw);
+          if (stored.version !== 1) throw new Error("Unknown memory version");
+          savedNotes = typeof stored.notes === "string" ? stored.notes.slice(0, 2000) : "";
+          chatHistory = boundedHistory(stored.history);
+        }
+        notesInput.value = savedNotes;
+        if (chatHistory.length) localAiResponse.textContent = chatHistory[chatHistory.length - 1].assistant;
+      } catch {
+        memoryStatus.textContent = "Memory unavailable";
+      }
+    }
+
+    function showMemoryEditor(open) {
+      document.getElementById("localAiMemoryEditor").hidden = !open;
+      document.getElementById("localAiForm").hidden = open;
+      localAiResponse.hidden = open;
+      memoryButton.setAttribute("aria-expanded", String(open));
+      if (open) { notesInput.value = savedNotes; notesInput.focus(); }
+    }
+    memoryButton.addEventListener("click", () => {
+      if (!isCrewAi) return;
+      showMemoryEditor(document.getElementById("localAiMemoryEditor").hidden);
+    });
+    saveMemoryButton.addEventListener("click", () => {
+      if (!isCrewAi || localAiPending) return;
+      savedNotes = notesInput.value.trim().slice(0, 2000);
+      persistMemory();
+      showMemoryEditor(false);
+      localAiPrompt.focus();
+    });
+    newChatButton.addEventListener("click", () => {
+      if (!isCrewAi || localAiPending) return;
+      chatHistory = [];
+      persistMemory();
+      localAiPrompt.value = "";
+      localAiResponse.textContent = "New chat. Saved facts and preferences are still remembered.";
+      showMemoryEditor(false);
+    });
+    forgetButton.addEventListener("click", () => {
+      if (!isCrewAi || localAiPending) return;
+      chatHistory = [];
+      savedNotes = "";
+      notesInput.value = "";
+      localAiPrompt.value = "";
+      try {
+        localStorage.removeItem(memoryKey);
+        memoryStatus.textContent = "Memory cleared";
+      } catch {
+        memoryStatus.textContent = "Could not erase saved memory";
+      }
+      localAiResponse.textContent = "Chat and saved facts cleared from this session.";
+      showMemoryEditor(false);
+    });
+
+    function promptWithMemory(prompt) {
+      return [
+        job.role + " Be helpful and concise. " +
+        "Use the user's language; when writing Chinese use Traditional Chinese. Avoid unnecessary English mixing. " +
+        "You run locally. Do not claim access to files, cloud services or memories not supplied here. " +
+        "The JSON below contains saved user notes, recent conversation pairs and the current message. " +
+        "Use it as context and answer only the current message. Do not invent forgotten details. " +
+        "For facts to keep long term, the user can put them in Memory and click Save; do not claim you saved new facts yourself.",
+        JSON.stringify({ savedUserNotes: savedNotes, recentConversation: chatHistory, currentUserMessage: prompt })
+      ].join("\n\n");
+    }
+
+    function holdCrewForChat() {
+      const handlers = {
+        doggo: [enterDoggoNotice, clearStateTimer],
+        piggo: [enterPiggoNotice, clearPiggoStateTimer],
+        farto: [enterFartoNotice, clearFartoStateTimer],
+        kitto: [enterKittoNotice, clearKittoStateTimer],
+        beeo: [enterBeeoNotice, clearBeeoStateTimer]
+      };
+      handlers[requested][0]();
+      handlers[requested][1]();
+    }
+    function resumeCrewAfterChat() {
+      const handlers = { doggo: resumeDoggoStateMachine, piggo: resumePiggoStateMachine,
+        farto: resumeFartoStateMachine, kitto: resumeKittoStateMachine, beeo: resumeBeeoStateMachine };
+      handlers[requested]();
+    }
+
+    function setLocalAiOpen(open) {
+      if (!isCrewAi) return;
+      localAiOpen = open;
+      localAiPanel.hidden = !open;
+      doggo.setAttribute("aria-controls", "localAiPanel");
+      doggo.setAttribute("aria-expanded", String(open));
+      bubble.classList.remove("show");
+      bubble.setAttribute("aria-hidden", "true");
+      if (open) {
+        holdCrewForChat();
+        localAiPrompt.focus();
+      } else {
+        if (activePointer === null) resumeCrewAfterChat();
+        doggo.focus({ preventScroll: true });
+      }
+    }
+
+    document.getElementById("localAiClose").addEventListener("click", () => setLocalAiOpen(false));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !event.isComposing && localAiOpen) {
+        event.preventDefault();
+        setLocalAiOpen(false);
+      }
+    });
+    localAiPrompt.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.isComposing || event.keyCode === 229)) {
+        event.preventDefault();
+      }
+    });
+    document.getElementById("localAiForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const prompt = localAiPrompt.value.trim();
+      if (!isCrewAi || !localAiOpen || localAiPending || !prompt) return;
+      if (typeof window.ai?.askLocal !== "function") {
+        localAiResponse.textContent = "Local AI is unavailable. Restart Ø-CREW with its AI preload enabled.";
+        return;
+      }
+      localAiPending = true;
+      localAiSend.disabled = true;
+      tryJobButton.disabled = true;
+      newChatButton.disabled = forgetButton.disabled = saveMemoryButton.disabled = true;
+      localAiPrompt.readOnly = true;
+      localAiResponse.textContent = "Thinking…";
+      localAiResponse.scrollTop = 0;
+      try {
+        const reply = await window.ai.askLocal(promptWithMemory(prompt));
+        if (typeof reply === "string" && reply.trim()) {
+          chatHistory = boundedHistory([...chatHistory, { user: prompt, assistant: reply.trim() }]);
+          persistMemory();
+        }
+        localAiResponse.textContent = typeof reply === "string" && reply.trim()
+          ? reply.trim() : "No reply received. Please try again.";
+      } catch (error) {
+        localAiResponse.textContent = "Could not reach local Qwen. Check Ollama and try again.";
+      } finally {
+        localAiPending = false;
+        localAiSend.disabled = false;
+        tryJobButton.disabled = false;
+        newChatButton.disabled = forgetButton.disabled = saveMemoryButton.disabled = false;
+        localAiPrompt.readOnly = false;
+        // A late reply updates the saved response without reopening the panel.
+        if (localAiOpen && !document.hidden) localAiPrompt.focus();
+      }
+    });
+
+    /*
+      DOGGØ
+    */
+
+    const doggoFrames = {
+      right: [
+        "DOGGO_04c_walk_flip.png",
+        "DOGGØ_04e_walk_contact_flip.png",
+        "DOGGO_04d_walk_opposite_flip.png",
+        "DOGGØ_04f_walk_pass_flip.png"
+      ],
+
+      left: [
+        "DOGGO_04_walk.png",
+        "DOGGØ_04e_walk_contact.png",
+        "DOGGO_04b_walk_opposite.png",
+        "DOGGØ_04f_walk_pass.png"
+      ]
+    };
+
+    /*
+      PIGGØ
+
+      Confirmed:
+      06 / 06b = RIGHT
+      06c / 06d = LEFT
+    */
+
+    const piggoFrames = {
+      right: [
+        "PIGGO_06_waddle_sniff.png",
+        "PIGGO_06b_waddle_opposite.png"
+      ],
+
+      left: [
+        "PIGGO_06c_waddle_flip.png",
+        "PIGGO_06d_waddle_opposite_flip.png"
+      ]
+    };
+
+    /*
+      FARTØ
+
+      Hover frames are direction-neutral.
+      Movement direction is handled by the window roam engine.
+    */
+
+    const fartoHoverFrames = [
+      "FARTO_09_hover_up.png",
+      "FARTO_10_hover_down.png"
+    ];
+
+    /*
+      DOGGØ STATE
+    */
+
+    let doggoDirection =
+      "right";
+
+    let doggoState =
+      "IDLE";
+
+    let walkFrameIndex =
+      0;
+
+    let walkTimer =
+      null;
+
+    let stateTimer =
+      null;
+
+    /*
+      PIGGØ STATE
+    */
+
+    let piggoDirection =
+      "right";
+
+    let piggoState =
+      "IDLE";
+
+    let piggoWalkFrameIndex =
+      0;
+
+    let piggoWalkTimer =
+      null;
+
+    let piggoStateTimer =
+      null;
+
+    let piggoRestBlinkTimer =
+      null;
+
+    let piggoRestReturnTimer =
+      null;
+
+    /*
+      KITTØ STATE
+    */
+
+    let kittoState =
+      "IDLE";
+
+    let kittoStateTimer =
+      null;
+
+    /*
+      BEEØ STATE
+    */
+
+    let beeoState =
+      "HOVER";
+
+    let beeoFrameIndex =
+      0;
+
+    let beeoFrameTimer =
+      null;
+
+    let beeoStateTimer =
+      null;
+
+    /*
+      FARTØ STATE
+    */
+
+    let fartoDirection =
+      "right";
+
+    let fartoState =
+      "IDLE";
+
+    let fartoHoverFrameIndex =
+      0;
+
+    let fartoHoverTimer =
+      null;
+
+    let fartoStateTimer =
+      null;
+
+    let fartoJetTimer =
+      null;
+
+    let fartoJetReturnTimer =
+      null;
+
+    function randomBetween(
+      min,
+      max
+    ) {
+      return Math.floor(
+        min +
+        Math.random() *
+        (max - min + 1)
+      );
+    }
+
+    /*
+      DOGGØ FUNCTIONS
+    */
+
+    function clearStateTimer() {
+      if (stateTimer !== null) {
+        clearTimeout(
+          stateTimer
+        );
+
+        stateTimer =
+          null;
+      }
+    }
+
+    function setDoggoIdleAlive(
+      enabled
+    ) {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      if (enabled) {
+        doggo.classList.remove(
+          "sleeping"
+        );
+      }
+
+      doggo.classList.toggle(
+        "idle-alive",
+        enabled
+      );
+    }
+
+    function setDoggoSleeping(
+      enabled
+    ) {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      if (enabled) {
+        doggo.classList.remove(
+          "idle-alive"
+        );
+      }
+
+      doggo.classList.toggle(
+        "sleeping",
+        enabled
+      );
+    }
+
+    function getDoggoFrames() {
+      return doggoFrames[
+        doggoDirection
+      ];
+    }
+
+    function stopDoggoWalkFrames() {
+      if (
+        walkTimer !== null
+      ) {
+        clearInterval(
+          walkTimer
+        );
+
+        walkTimer =
+          null;
+      }
+    }
+
+    function startDoggoWalkFrames() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      setDoggoIdleAlive(
+        false
+      );
+
+      setDoggoSleeping(
+        false
+      );
+
+      stopDoggoWalkFrames();
+
+      const frames =
+        getDoggoFrames();
+
+      walkFrameIndex =
+        0;
+
+      petImage.src =
+        frames[
+          walkFrameIndex
+        ];
+
+      walkTimer =
+        setInterval(
+          () => {
+            const currentFrames =
+              getDoggoFrames();
+
+            walkFrameIndex =
+              (
+                walkFrameIndex +
+                1
+              ) %
+              currentFrames.length;
+
+            petImage.src =
+              currentFrames[
+                walkFrameIndex
+              ];
+          },
+          220
+        );
+    }
+
+    function showDoggoIdle() {
+      if (
+        requested ===
+        "doggo"
+      ) {
+        petImage.src =
+          "DOGGØ.png";
+      }
+    }
+
+    function enterDoggoIdle() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      clearStateTimer();
+
+      doggoState =
+        "IDLE";
+
+      stopDoggoWalkFrames();
+
+      window.pet.roamStop();
+
+      setDoggoSleeping(
+        false
+      );
+
+      showDoggoIdle();
+
+      setDoggoIdleAlive(
+        true
+      );
+
+      const idleDuration =
+        randomBetween(
+          8000,
+          20000
+        );
+
+      stateTimer =
+        setTimeout(
+          enterDoggoRoam,
+          idleDuration
+        );
+    }
+
+    function enterDoggoRoam() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      clearStateTimer();
+
+      doggoState =
+        "ROAM";
+
+      setDoggoIdleAlive(
+        false
+      );
+
+      setDoggoSleeping(
+        false
+      );
+
+      startDoggoWalkFrames();
+
+      window.pet.roamStart(
+        doggoDirection,
+        105
+      );
+
+      const roamDuration =
+        randomBetween(
+          12000,
+          25000
+        );
+
+      stateTimer =
+        setTimeout(
+          enterDoggoFlop,
+          roamDuration
+        );
+    }
+
+    function enterDoggoFlop() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      clearStateTimer();
+
+      doggoState =
+        "FLOP";
+
+      setDoggoIdleAlive(
+        false
+      );
+
+      setDoggoSleeping(
+        false
+      );
+
+      stopDoggoWalkFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "DOGGØ_05_flop.png";
+
+      stateTimer =
+        setTimeout(
+          enterDoggoSleep,
+          1000
+        );
+    }
+
+    function enterDoggoSleep() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      clearStateTimer();
+
+      doggoState =
+        "SLEEP";
+
+      stopDoggoWalkFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "DOGGØ_06_sleep.png";
+
+      setDoggoSleeping(
+        true
+      );
+
+      const sleepDuration =
+        randomBetween(
+          20000,
+          45000
+        );
+
+      stateTimer =
+        setTimeout(
+          enterDoggoIdle,
+          sleepDuration
+        );
+    }
+
+    function enterDoggoNotice() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      clearStateTimer();
+
+      doggoState =
+        "NOTICE";
+
+      setDoggoIdleAlive(
+        false
+      );
+
+      setDoggoSleeping(
+        false
+      );
+
+      stopDoggoWalkFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "DOGGO_08_look_camera.png";
+
+      stateTimer =
+        setTimeout(
+          enterDoggoIdle,
+          1800
+        );
+    }
+
+    function pauseDoggoStateMachine() {
+      if (
+        requested !==
+        "doggo"
+      ) {
+        return;
+      }
+
+      clearStateTimer();
+
+      doggoState =
+        "DRAG";
+
+      setDoggoIdleAlive(
+        false
+      );
+
+      setDoggoSleeping(
+        false
+      );
+
+      stopDoggoWalkFrames();
+
+      window.pet.roamStop();
+
+      showDoggoIdle();
+    }
+
+    function resumeDoggoStateMachine() {
+      if (localAiOpen && !document.hidden) {
+        holdCrewForChat();
+        return;
+      }
+      if (
+        requested !==
+          "doggo" ||
+        document.hidden
+      ) {
+        return;
+      }
+
+      enterDoggoIdle();
+    }
+
+    /*
+      PIGGØ FUNCTIONS
+    */
+
+    function clearPiggoStateTimer() {
+      if (
+        piggoStateTimer !==
+        null
+      ) {
+        clearTimeout(
+          piggoStateTimer
+        );
+
+        piggoStateTimer =
+          null;
+      }
+    }
+
+    function clearPiggoRestTimers() {
+      if (
+        piggoRestBlinkTimer !==
+        null
+      ) {
+        clearTimeout(
+          piggoRestBlinkTimer
+        );
+
+        piggoRestBlinkTimer =
+          null;
+      }
+
+      if (
+        piggoRestReturnTimer !==
+        null
+      ) {
+        clearTimeout(
+          piggoRestReturnTimer
+        );
+
+        piggoRestReturnTimer =
+          null;
+      }
+    }
+
+    function setPiggoIdleAlive(
+      enabled
+    ) {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      doggo.classList.toggle(
+        "piggo-idle",
+        enabled
+      );
+    }
+
+    function getPiggoFrames() {
+      return piggoFrames[
+        piggoDirection
+      ];
+    }
+
+    function stopPiggoWalkFrames() {
+      if (
+        piggoWalkTimer !==
+        null
+      ) {
+        clearInterval(
+          piggoWalkTimer
+        );
+
+        piggoWalkTimer =
+          null;
+      }
+    }
+
+    function startPiggoWalkFrames() {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      setPiggoIdleAlive(
+        false
+      );
+
+      stopPiggoWalkFrames();
+
+      const frames =
+        getPiggoFrames();
+
+      piggoWalkFrameIndex =
+        0;
+
+      petImage.src =
+        frames[
+          piggoWalkFrameIndex
+        ];
+
+      piggoWalkTimer =
+        setInterval(
+          () => {
+            const currentFrames =
+              getPiggoFrames();
+
+            piggoWalkFrameIndex =
+              (
+                piggoWalkFrameIndex +
+                1
+              ) %
+              currentFrames.length;
+
+            petImage.src =
+              currentFrames[
+                piggoWalkFrameIndex
+              ];
+          },
+          320
+        );
+    }
+
+    function showPiggoIdle() {
+      if (
+        requested ===
+        "piggo"
+      ) {
+        petImage.src =
+          "PIGGØ.png";
+      }
+    }
+
+    function enterPiggoIdle() {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      clearPiggoStateTimer();
+      clearPiggoRestTimers();
+
+      piggoState =
+        "IDLE";
+
+      stopPiggoWalkFrames();
+
+      window.pet.roamStop();
+
+      showPiggoIdle();
+
+      setPiggoIdleAlive(
+        true
+      );
+
+      const idleDuration =
+        randomBetween(
+          8000,
+          20000
+        );
+
+      piggoStateTimer =
+        setTimeout(
+          enterPiggoRoam,
+          idleDuration
+        );
+    }
+
+    function enterPiggoRoam() {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      clearPiggoStateTimer();
+      clearPiggoRestTimers();
+
+      piggoState =
+        "ROAM";
+
+      setPiggoIdleAlive(
+        false
+      );
+
+      startPiggoWalkFrames();
+
+      window.pet.roamStart(
+        piggoDirection,
+        80
+      );
+
+      const roamDuration =
+        randomBetween(
+          12000,
+          25000
+        );
+
+      piggoStateTimer =
+        setTimeout(
+          enterPiggoRest,
+          roamDuration
+        );
+    }
+
+    function schedulePiggoRestBlink() {
+      if (
+        requested !==
+          "piggo" ||
+        piggoState !==
+          "REST"
+      ) {
+        return;
+      }
+
+      const stillResting = () =>
+        requested === "piggo" &&
+        piggoState === "REST";
+
+      const setRestImage = (src) => {
+        if (!stillResting()) {
+          return false;
+        }
+
+        petImage.src = src;
+        return true;
+      };
+
+      /*
+        REST sequence:
+
+        1. Slow blink
+        2. Slow blink
+        3. Close eyes and sleep for 5 seconds
+        4. Return to IDLE
+
+        No repeated blinking loop.
+      */
+
+      piggoRestBlinkTimer =
+        setTimeout(
+          () => {
+            piggoRestBlinkTimer =
+              null;
+
+            if (
+              !setRestImage(
+                "PIGGO_09_rest.png"
+              )
+            ) {
+              return;
+            }
+
+            piggoRestReturnTimer =
+              setTimeout(
+                () => {
+                  if (
+                    !setRestImage(
+                      "PIGGØ.png"
+                    )
+                  ) {
+                    return;
+                  }
+
+                  piggoRestReturnTimer =
+                    setTimeout(
+                      () => {
+                        if (
+                          !setRestImage(
+                            "PIGGO_09_rest.png"
+                          )
+                        ) {
+                          return;
+                        }
+
+                        piggoRestReturnTimer =
+                          setTimeout(
+                            () => {
+                              if (
+                                !setRestImage(
+                                  "PIGGØ.png"
+                                )
+                              ) {
+                                return;
+                              }
+
+                              piggoRestReturnTimer =
+                                setTimeout(
+                                  () => {
+                                    if (
+                                      !setRestImage(
+                                        "PIGGO_09_rest.png"
+                                      )
+                                    ) {
+                                      return;
+                                    }
+
+                                    piggoRestReturnTimer =
+                                      setTimeout(
+                                        () => {
+                                          piggoRestReturnTimer =
+                                            null;
+
+                                          if (
+                                            stillResting()
+                                          ) {
+                                            enterPiggoIdle();
+                                          }
+                                        },
+                                        5000
+                                      );
+                                  },
+                                  500
+                                );
+                            },
+                            450
+                          );
+                      },
+                      550
+                    );
+                },
+                450
+              );
+          },
+          400
+        );
+    }
+
+    function enterPiggoRest() {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      clearPiggoStateTimer();
+      clearPiggoRestTimers();
+
+      piggoState =
+        "REST";
+
+      setPiggoIdleAlive(
+        false
+      );
+
+      stopPiggoWalkFrames();
+
+      window.pet.roamStop();
+
+      showPiggoIdle();
+
+      schedulePiggoRestBlink();
+    }
+
+    function enterPiggoNotice() {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      clearPiggoStateTimer();
+      clearPiggoRestTimers();
+
+      piggoState =
+        "NOTICE";
+
+      setPiggoIdleAlive(
+        false
+      );
+
+      stopPiggoWalkFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "PIGGO_08_look_camera.png";
+
+      piggoStateTimer =
+        setTimeout(
+          enterPiggoIdle,
+          1800
+        );
+    }
+
+    function pausePiggoStateMachine() {
+      if (
+        requested !==
+        "piggo"
+      ) {
+        return;
+      }
+
+      clearPiggoStateTimer();
+      clearPiggoRestTimers();
+
+      piggoState =
+        "DRAG";
+
+      setPiggoIdleAlive(
+        false
+      );
+
+      stopPiggoWalkFrames();
+
+      window.pet.roamStop();
+
+      showPiggoIdle();
+    }
+
+    function resumePiggoStateMachine() {
+      if (localAiOpen && !document.hidden) { holdCrewForChat(); return; }
+      if (
+        requested !==
+          "piggo" ||
+        document.hidden
+      ) {
+        return;
+      }
+
+      enterPiggoIdle();
+    }
+
+    /*
+      BEEØ FUNCTIONS
+
+      Cartoon bee behavior:
+      keep flapping and bobbing in place.
+      No sleep state.
+    */
+
+    const beeoFrames = [
+      "BEEO_wings_up.png",
+      "BEEO_wings_down.png"
+    ];
+
+    function clearBeeoStateTimer() {
+      if (
+        beeoStateTimer !==
+        null
+      ) {
+        clearTimeout(
+          beeoStateTimer
+        );
+
+        beeoStateTimer =
+          null;
+      }
+    }
+
+    function stopBeeoFrames() {
+      if (
+        beeoFrameTimer !==
+        null
+      ) {
+        clearInterval(
+          beeoFrameTimer
+        );
+
+        beeoFrameTimer =
+          null;
+      }
+
+      doggo.classList.remove(
+        "beeo-hover"
+      );
+
+      petImage.classList.remove(
+        "beeo-wing-up",
+        "beeo-wing-down"
+      );
+    }
+
+    function startBeeoFrames() {
+      if (
+        requested !==
+        "beeo"
+      ) {
+        return;
+      }
+
+      stopBeeoFrames();
+
+      doggo.classList.add(
+        "beeo-hover"
+      );
+
+      beeoFrameIndex =
+        0;
+
+      petImage.classList.remove(
+        "beeo-wing-down"
+      );
+
+      petImage.classList.add(
+        "beeo-wing-up"
+      );
+
+      petImage.src =
+        "BEEO_wings_up.png";
+
+      beeoFrameTimer =
+        setInterval(
+          () => {
+            beeoFrameIndex =
+              (
+                beeoFrameIndex +
+                1
+              ) %
+              beeoFrames.length;
+
+            const isWingDown =
+              beeoFrameIndex === 1;
+
+            petImage.classList.toggle(
+              "beeo-wing-up",
+              !isWingDown
+            );
+
+            petImage.classList.toggle(
+              "beeo-wing-down",
+              isWingDown
+            );
+
+            petImage.src =
+              beeoFrames[
+                beeoFrameIndex
+              ];
+          },
+          220
+        );
+    }
+
+    function enterBeeoHover() {
+      if (
+        requested !==
+        "beeo"
+      ) {
+        return;
+      }
+
+      clearBeeoStateTimer();
+
+      beeoState =
+        "HOVER";
+
+      window.pet.roamStop();
+
+      startBeeoFrames();
+    }
+
+    function enterBeeoNotice() {
+      if (
+        requested !==
+        "beeo"
+      ) {
+        return;
+      }
+
+      clearBeeoStateTimer();
+
+      beeoState =
+        "NOTICE";
+
+      stopBeeoFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "BEEO_08_look_camera.png";
+
+      beeoStateTimer =
+        setTimeout(
+          enterBeeoHover,
+          1500
+        );
+    }
+
+    function pauseBeeoStateMachine() {
+      if (
+        requested !==
+        "beeo"
+      ) {
+        return;
+      }
+
+      clearBeeoStateTimer();
+
+      beeoState =
+        "DRAG";
+
+      stopBeeoFrames();
+
+      petImage.src =
+        "BEEØ.png";
+
+      window.pet.roamStop();
+    }
+
+    function resumeBeeoStateMachine() {
+      if (localAiOpen && !document.hidden) { holdCrewForChat(); return; }
+      if (
+        requested !==
+          "beeo" ||
+        document.hidden
+      ) {
+        return;
+      }
+
+      enterBeeoHover();
+    }
+
+    /*
+      KITTØ FUNCTIONS
+
+      Lazy-cat rhythm:
+      IDLE -> one lazy action -> long REST -> IDLE
+
+      KITTØ sleeps 60-120 seconds, longer than the others.
+      Roll is occasional, not constant.
+    */
+
+    function clearKittoStateTimer() {
+      if (
+        kittoStateTimer !==
+        null
+      ) {
+        clearTimeout(
+          kittoStateTimer
+        );
+
+        kittoStateTimer =
+          null;
+      }
+    }
+
+    function setKittoIdleAlive(
+      enabled
+    ) {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      if (enabled) {
+        doggo.classList.remove(
+          "kitto-sleeping"
+        );
+      }
+
+      doggo.classList.toggle(
+        "kitto-idle",
+        enabled
+      );
+    }
+
+    function setKittoSleeping(
+      enabled
+    ) {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      if (enabled) {
+        doggo.classList.remove(
+          "kitto-idle"
+        );
+      }
+
+      doggo.classList.toggle(
+        "kitto-sleeping",
+        enabled
+      );
+    }
+
+    function showKittoIdle() {
+      if (
+        requested ===
+        "kitto"
+      ) {
+        petImage.src =
+          "KITTØ.png";
+      }
+    }
+
+    function enterKittoIdle() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "IDLE";
+
+      window.pet.roamStop();
+
+      setKittoSleeping(
+        false
+      );
+
+      showKittoIdle();
+
+      setKittoIdleAlive(
+        true
+      );
+
+      const idleDuration =
+        randomBetween(
+          9000,
+          18000
+        );
+
+      kittoStateTimer =
+        setTimeout(
+          chooseKittoLazyAction,
+          idleDuration
+        );
+    }
+
+    function chooseKittoLazyAction() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      const roll =
+        Math.random();
+
+      /*
+        Weighted like a genuinely lazy cat:
+        45% yawn
+        25% stretch
+        15% roll
+        15% skip theatrics and go straight back to sleep
+      */
+
+      if (roll < 0.45) {
+        enterKittoYawn();
+        return;
+      }
+
+      if (roll < 0.70) {
+        enterKittoStretch();
+        return;
+      }
+
+      if (roll < 0.85) {
+        enterKittoRollA();
+        return;
+      }
+
+      enterKittoRest();
+    }
+
+    function enterKittoStretch() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "STRETCH";
+
+      setKittoIdleAlive(
+        false
+      );
+
+      setKittoSleeping(
+        false
+      );
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "KITTO_09_stretch.png";
+
+      kittoStateTimer =
+        setTimeout(
+          enterKittoYawn,
+          1600
+        );
+    }
+
+    function enterKittoYawn() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "YAWN";
+
+      setKittoIdleAlive(
+        false
+      );
+
+      setKittoSleeping(
+        false
+      );
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "KITTO_10_yawn.png";
+
+      kittoStateTimer =
+        setTimeout(
+          enterKittoRest,
+          1900
+        );
+    }
+
+    function enterKittoRollA() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "ROLL";
+
+      setKittoIdleAlive(
+        false
+      );
+
+      setKittoSleeping(
+        false
+      );
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "KITTO_11_roll_a.png";
+
+      kittoStateTimer =
+        setTimeout(
+          enterKittoRollB,
+          950
+        );
+    }
+
+    function enterKittoRollB() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      petImage.src =
+        "KITTO_12_roll_b.png";
+
+      kittoStateTimer =
+        setTimeout(
+          enterKittoRest,
+          1100
+        );
+    }
+
+    function enterKittoRest() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "REST";
+
+      setKittoIdleAlive(
+        false
+      );
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "KITTO_13_head_down.png";
+
+      setKittoSleeping(
+        true
+      );
+
+      /*
+        KITTØ is intentionally the sleepiest crew member.
+        60-120 seconds is much longer than DOGGØ/FARTØ rest.
+      */
+
+      const restDuration =
+        randomBetween(
+          60000,
+          120000
+        );
+
+      kittoStateTimer =
+        setTimeout(
+          enterKittoIdle,
+          restDuration
+        );
+    }
+
+    function enterKittoNotice() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "NOTICE";
+
+      setKittoIdleAlive(
+        false
+      );
+
+      setKittoSleeping(
+        false
+      );
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "KITTO_08_look_camera.png";
+
+      kittoStateTimer =
+        setTimeout(
+          enterKittoIdle,
+          1800
+        );
+    }
+
+    function pauseKittoStateMachine() {
+      if (
+        requested !==
+        "kitto"
+      ) {
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "DRAG";
+
+      setKittoIdleAlive(
+        false
+      );
+
+      setKittoSleeping(
+        false
+      );
+
+      window.pet.roamStop();
+
+      showKittoIdle();
+    }
+
+    function resumeKittoStateMachine() {
+      if (localAiOpen && !document.hidden) { holdCrewForChat(); return; }
+      if (
+        requested !==
+          "kitto" ||
+        document.hidden
+      ) {
+        return;
+      }
+
+      enterKittoIdle();
+    }
+
+    /*
+      FARTØ FUNCTIONS
+    */
+
+    function clearFartoStateTimer() {
+      if (
+        fartoStateTimer !==
+        null
+      ) {
+        clearTimeout(
+          fartoStateTimer
+        );
+
+        fartoStateTimer =
+          null;
+      }
+    }
+
+    function clearFartoJetTimers() {
+      if (
+        fartoJetTimer !==
+        null
+      ) {
+        clearTimeout(
+          fartoJetTimer
+        );
+
+        fartoJetTimer =
+          null;
+      }
+
+      if (
+        fartoJetReturnTimer !==
+        null
+      ) {
+        clearTimeout(
+          fartoJetReturnTimer
+        );
+
+        fartoJetReturnTimer =
+          null;
+      }
+    }
+
+    function stopFartoHoverFrames() {
+      if (
+        fartoHoverTimer !==
+        null
+      ) {
+        clearInterval(
+          fartoHoverTimer
+        );
+
+        fartoHoverTimer =
+          null;
+      }
+      doggo.classList.remove(
+        "farto-hover"
+      );
+    }
+
+    function startFartoHoverFrames(
+      interval
+    ) {
+      if (
+        requested !==
+        "farto"
+      ) {
+        return;
+      }
+
+      stopFartoHoverFrames();
+
+      /*
+        Keep a single visual frame so FARTØ does not appear
+        to grow/shrink when hover assets have different crops.
+        The actual hovering is handled by CSS on the shell.
+      */
+
+      petImage.src =
+        "FARTO_09_hover_up.png";
+
+      doggo.classList.add(
+        "farto-hover"
+      );
+    }
+
+    function enterFartoIdle() {
+      if (
+        requested !==
+        "farto"
+      ) {
+        return;
+      }
+
+      clearFartoStateTimer();
+      clearFartoJetTimers();
+
+      fartoState =
+        "IDLE";
+
+      window.pet.roamStop();
+
+      startFartoHoverFrames(
+        2800
+      );
+
+      const idleDuration =
+        randomBetween(
+          8000,
+          20000
+        );
+
+      fartoStateTimer =
+        setTimeout(
+          enterFartoDrift,
+          idleDuration
+        );
+    }
+
+    function scheduleFartoJetPulse() {
+      if (
+        requested !==
+          "farto" ||
+        fartoState !==
+          "DRIFT"
+      ) {
+        return;
+      }
+
+      clearFartoJetTimers();
+
+      const delay =
+        randomBetween(
+          3000,
+          6500
+        );
+
+      fartoJetTimer =
+        setTimeout(
+          () => {
+            fartoJetTimer =
+              null;
+
+            if (
+              requested !==
+                "farto" ||
+              fartoState !==
+                "DRIFT"
+            ) {
+              return;
+            }
+
+            stopFartoHoverFrames();
+
+            petImage.src =
+              "FARTO_11_jet_pulse.png";
+
+            window.pet.roamStart(
+              fartoDirection,
+              40
+            );
+
+            const pulseDuration =
+              randomBetween(
+                400,
+                800
+              );
+
+            fartoJetReturnTimer =
+              setTimeout(
+                () => {
+                  fartoJetReturnTimer =
+                    null;
+
+                  if (
+                    requested !==
+                      "farto" ||
+                    fartoState !==
+                      "DRIFT"
+                  ) {
+                    return;
+                  }
+
+                  window.pet.roamStart(
+                    fartoDirection,
+                    30
+                  );
+
+                  startFartoHoverFrames(
+                    1800
+                  );
+
+                  scheduleFartoJetPulse();
+                },
+                pulseDuration
+              );
+          },
+          delay
+        );
+    }
+
+    function enterFartoDrift() {
+      if (
+        requested !==
+        "farto"
+      ) {
+        return;
+      }
+
+      clearFartoStateTimer();
+      clearFartoJetTimers();
+
+      fartoState =
+        "DRIFT";
+
+      startFartoHoverFrames(
+        1800
+      );
+
+      window.pet.roamStart(
+        fartoDirection,
+        30
+      );
+
+      scheduleFartoJetPulse();
+
+      const driftDuration =
+        randomBetween(
+          12000,
+          25000
+        );
+
+      fartoStateTimer =
+        setTimeout(
+          enterFartoRest,
+          driftDuration
+        );
+    }
+
+    function enterFartoRest() {
+      if (
+        requested !==
+        "farto"
+      ) {
+        return;
+      }
+
+      clearFartoStateTimer();
+      clearFartoJetTimers();
+
+      fartoState =
+        "REST";
+
+      stopFartoHoverFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "FARTO_12_rest.png";
+
+      const restDuration =
+        randomBetween(
+          20000,
+          45000
+        );
+
+      fartoStateTimer =
+        setTimeout(
+          enterFartoIdle,
+          restDuration
+        );
+    }
+
+    function enterFartoNotice() {
+      if (
+        requested !==
+        "farto"
+      ) {
+        return;
+      }
+
+      clearFartoStateTimer();
+      clearFartoJetTimers();
+
+      fartoState =
+        "NOTICE";
+
+      stopFartoHoverFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "FARTO_08_look_camera.png";
+
+      fartoStateTimer =
+        setTimeout(
+          enterFartoIdle,
+          1800
+        );
+    }
+
+    function pauseFartoStateMachine() {
+      if (
+        requested !==
+        "farto"
+      ) {
+        return;
+      }
+
+      clearFartoStateTimer();
+      clearFartoJetTimers();
+
+      fartoState =
+        "DRAG";
+
+      stopFartoHoverFrames();
+
+      window.pet.roamStop();
+
+      petImage.src =
+        "FARTO_11_jet_pulse.png";
+    }
+
+    function resumeFartoStateMachine() {
+      if (localAiOpen && !document.hidden) { holdCrewForChat(); return; }
+      if (
+        requested !==
+          "farto" ||
+        document.hidden
+      ) {
+        return;
+      }
+
+      enterFartoIdle();
+    }
+
+    /*
+      SHARED ROAM DIRECTION
+    */
+
+    window.pet.onRoamDirection(
+      (direction) => {
+        if (
+          direction !==
+            "left" &&
+          direction !==
+            "right"
+        ) {
+          return;
+        }
+
+        if (
+          requested ===
+          "doggo"
+        ) {
+          doggoDirection =
+            direction;
+
+          if (
+            doggoState ===
+            "ROAM"
+          ) {
+            startDoggoWalkFrames();
+          }
+
+          return;
+        }
+
+        if (
+          requested ===
+          "piggo"
+        ) {
+          piggoDirection =
+            direction;
+
+          if (
+            piggoState ===
+            "ROAM"
+          ) {
+            startPiggoWalkFrames();
+          }
+
+          return;
+        }
+
+        if (
+          requested ===
+          "farto"
+        ) {
+          fartoDirection =
+            direction;
+        }
+      }
+    );
+
+    /*
+      START
+    */
+
+    if (
+      requested ===
+      "doggo"
+    ) {
+      enterDoggoIdle();
+    }
+
+    if (
+      requested ===
+      "piggo"
+    ) {
+      enterPiggoIdle();
+    }
+
+    if (
+      requested ===
+      "farto"
+    ) {
+      enterFartoIdle();
+    }
+
+    if (
+      requested ===
+      "kitto"
+    ) {
+      enterKittoIdle();
+    }
+
+    if (
+      requested ===
+      "beeo"
+    ) {
+      enterBeeoHover();
+    }
+
+    /*
+      NOTICE / BUBBLE
+    */
+
+    function toggle() {
+      if (isCrewAi) {
+        setLocalAiOpen(!localAiOpen);
+        return;
+      }
+      if (
+        requested ===
+        "doggo"
+      ) {
+        enterDoggoNotice();
+      }
+
+      if (
+        requested ===
+        "piggo"
+      ) {
+        enterPiggoNotice();
+      }
+
+      if (
+        requested ===
+        "farto"
+      ) {
+        enterFartoNotice();
+      }
+
+      if (
+        requested ===
+        "beeo"
+      ) {
+        enterBeeoNotice();
+      }
+
+      if (
+        requested ===
+        "kitto"
+      ) {
+        enterKittoNotice();
+      }
+
+      const visible =
+        bubble.classList.toggle(
+          "show"
+        );
+
+      doggo.setAttribute(
+        "aria-expanded",
+        String(visible)
+      );
+
+      bubble.setAttribute(
+        "aria-hidden",
+        String(!visible)
+      );
+    }
+
+    window.pet.onToggle(
+      toggle
+    );
+
+    /*
+      DRAG
+    */
+
+    doggo.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (
+          event.button !== 0 ||
+          activePointer !== null
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        activePointer =
+          event.pointerId;
+
+        if (
+          requested ===
+          "doggo"
+        ) {
+          pauseDoggoStateMachine();
+        }
+
+        if (
+          requested ===
+          "piggo"
+        ) {
+          pausePiggoStateMachine();
+        }
+
+        if (
+          requested ===
+          "farto"
+        ) {
+          pauseFartoStateMachine();
+        }
+
+        if (
+          requested ===
+          "kitto"
+        ) {
+          pauseKittoStateMachine();
+        }
+
+        if (
+          requested ===
+          "beeo"
+        ) {
+          pauseBeeoStateMachine();
+        }
+
+        doggo.setPointerCapture(
+          activePointer
+        );
+
+        doggo.classList.add(
+          "held"
+        );
+
+        window.pet.start();
+      }
+    );
+
+    function finish(
+      event,
+      cancelled
+    ) {
+      if (
+        activePointer ===
+          null ||
+        (
+          event &&
+          event.pointerId !==
+            activePointer
+        )
+      ) {
+        return;
+      }
+
+      const pointer =
+        activePointer;
+
+      activePointer =
+        null;
+
+      doggo.classList.remove(
+        "held"
+      );
+
+      if (cancelled) {
+        window.pet.cancel();
+      } else {
+        window.pet.end();
+      }
+
+      if (
+        doggo.hasPointerCapture(
+          pointer
+        )
+      ) {
+        doggo.releasePointerCapture(
+          pointer
+        );
+      }
+
+      if (
+        requested ===
+        "doggo"
+      ) {
+        resumeDoggoStateMachine();
+      }
+
+      if (
+        requested ===
+        "piggo"
+      ) {
+        resumePiggoStateMachine();
+      }
+
+      if (
+        requested ===
+        "farto"
+      ) {
+        resumeFartoStateMachine();
+      }
+
+      if (
+        requested ===
+        "kitto"
+      ) {
+        resumeKittoStateMachine();
+      }
+
+      if (
+        requested ===
+        "beeo"
+      ) {
+        resumeBeeoStateMachine();
+      }
+    }
+
+    doggo.addEventListener(
+      "pointerup",
+      (event) =>
+        finish(
+          event,
+          false
+        )
+    );
+
+    doggo.addEventListener(
+      "pointercancel",
+      (event) =>
+        finish(
+          event,
+          true
+        )
+    );
+
+    doggo.addEventListener(
+      "lostpointercapture",
+      (event) =>
+        finish(
+          event,
+          true
+        )
+    );
+
+    window.addEventListener(
+      "blur",
+      () =>
+        finish(
+          null,
+          true
+        )
+    );
+
+    doggo.addEventListener(
+      "dragstart",
+      (event) =>
+        event.preventDefault()
+    );
+
+    doggo.addEventListener(
+      "keydown",
+      (event) => {
+        if (
+          event.key ===
+            "Enter" ||
+          event.key ===
+            " "
+        ) {
+          event.preventDefault();
+
+          if (
+            !event.repeat
+          ) {
+            toggle();
+          }
+        }
+      }
+    );
+
+    /*
+      VISIBILITY
+    */
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (
+          requested ===
+          "doggo"
+        ) {
+          if (
+            document.hidden
+          ) {
+            pauseDoggoStateMachine();
+          } else if (
+            activePointer ===
+            null
+          ) {
+            resumeDoggoStateMachine();
+          }
+
+          return;
+        }
+
+        if (
+          requested ===
+          "piggo"
+        ) {
+          if (
+            document.hidden
+          ) {
+            pausePiggoStateMachine();
+          } else if (
+            activePointer ===
+            null
+          ) {
+            resumePiggoStateMachine();
+          }
+
+          return;
+        }
+
+        if (
+          requested ===
+          "farto"
+        ) {
+          if (
+            document.hidden
+          ) {
+            pauseFartoStateMachine();
+          } else if (
+            activePointer ===
+            null
+          ) {
+            resumeFartoStateMachine();
+          }
+
+          return;
+        }
+
+        if (
+          requested ===
+          "kitto"
+        ) {
+          if (
+            document.hidden
+          ) {
+            pauseKittoStateMachine();
+          } else if (
+            activePointer ===
+            null
+          ) {
+            resumeKittoStateMachine();
+          }
+        }
+
+        if (
+          requested ===
+          "beeo"
+        ) {
+          if (
+            document.hidden
+          ) {
+            pauseBeeoStateMachine();
+          } else if (
+            activePointer ===
+            null
+          ) {
+            resumeBeeoStateMachine();
+          }
+        }
+      }
+    );
+
+    window.addEventListener(
+      "pagehide",
+      () => {
+        if (
+          requested ===
+          "doggo"
+        ) {
+          pauseDoggoStateMachine();
+        }
+
+        if (
+          requested ===
+          "piggo"
+        ) {
+          pausePiggoStateMachine();
+        }
+
+        if (
+          requested ===
+          "farto"
+        ) {
+          pauseFartoStateMachine();
+        }
+
+        if (
+          requested ===
+          "kitto"
+        ) {
+          pauseKittoStateMachine();
+        }
+
+        if (
+          requested ===
+          "beeo"
+        ) {
+          pauseBeeoStateMachine();
+        }
+      }
+    );
+  </script>
+</body>
+</html>

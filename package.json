@@ -1,0 +1,19 @@
+{
+  "name": "aison-media-desk",
+  "version": "0.1.0",
+  "description": "Ø-CREW: five animated desktop companions with distinct local-AI jobs and separate local memories.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/verify.cjs"
+  },
+  "author": "AISØN Media Desk",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "electron": "^38.0.0"
+  },
+  "allowScripts": {
+    "electron@38.8.6": true
+  }
+}

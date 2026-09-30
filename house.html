@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ø-House</title>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      user-select: none;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    button {
+      width: 54px;
+      height: 54px;
+      border: none;
+      border-radius: 18px;
+      background: rgba(255, 248, 242, 0.94);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+      font-size: 30px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+      -webkit-app-region: no-drag;
+    }
+
+    button:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    button:focus-visible {
+      outline: 2px solid #9e684a;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <button id="houseButton" aria-label="Toggle Ø-Crew">
+    🏠
+  </button>
+
+  <script>
+    const houseButton = document.getElementById("houseButton");
+
+    houseButton.addEventListener("click", () => {
+      window.house.toggleCrew();
+    });
+  </script>
+</body>
+</html>
