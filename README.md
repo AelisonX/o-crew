@@ -1,8 +1,12 @@
 # Ø-CREW
 
-**Five tiny desktop companions. Five useful jobs. One local AI.**
+**Five tiny desktop companions. Five useful jobs. One local AI — for now.**
 
 An early Windows desktop prototype by AISØN: animated characters that roam, rest, respond to clicks, and help with small writing and planning tasks using Qwen through Ollama.
+
+Ø-CREW is being explored as a **local-first hybrid AI system**: routine tasks should use the smallest sufficient model where practical, while more capable cloud models may later be added as explicit, visible routes for tasks that genuinely need them.
+
+The current prototype is still fully local. Hybrid routing is a design direction, not a feature claim.
 
 <p align="center">
   <img src="DOGG%C3%98.png" width="130" alt="DOGGØ" />
@@ -22,7 +26,7 @@ An early Windows desktop prototype by AISØN: animated characters that roam, res
 | KITTØ | Traditional Chinese editor | “Polish this paragraph without changing its meaning.” |
 | BEEØ | Creative companion | “Write three playful captions for this.” |
 
-Each character has a distinct prompt and its own conversation history and saved notes. All five use the **same `qwen2.5:7b` model**; these are role-based companions, not five separately trained models.
+Each character has a distinct prompt and its own conversation history and saved notes. All five currently use the **same `qwen2.5:7b` model**; these are role-based companions, not five separately trained models.
 
 ## What works today
 
@@ -33,7 +37,53 @@ Each character has a distinct prompt and its own conversation history and saved 
 - Separate local memory for each character, retained across normal app restarts.
 - **Ø-House** hides or shows the crew together.
 
-This version works from the text you provide. It does **not** browse the web, read your files, control other apps, monitor social feeds, or automatically pass tasks between characters. There is no cloud-model fallback.
+This version works from the text you provide. It does **not** browse the web, read your files, control other apps, monitor social feeds, or automatically pass tasks between characters.
+
+There is currently **no cloud-model fallback or cloud-model routing**.
+
+## Design direction: local-first hybrid AI
+
+Ø-CREW is not intended to send every task to the largest available model.
+
+The design direction is simple:
+
+> **Use the smallest sufficient intelligence for the task.**
+
+Routine, lightweight, or privacy-sensitive tasks may stay on local models. Tasks that genuinely benefit from stronger remote models may later be routed to optional cloud services.
+
+If cloud routing is introduced, the intended design is to make that routing visible rather than silently treating every model as interchangeable.
+
+For example:
+
+```text
+routine task
+    ↓
+local model
+
+complex task
+    ↓
+optional cloud model
+```
+
+This is a design goal, not a claim about functionality in the current prototype.
+
+## Privacy and data boundaries
+
+The current prototype sends AI requests only to the user’s own Ollama server at:
+
+```text
+http://127.0.0.1:11434
+```
+
+The application itself does not currently send prompts to a cloud AI service.
+
+Installation and model downloads still require internet access, and third-party software such as Node.js, Electron, Ollama, operating-system services, or future optional integrations may have their own network behaviour and terms.
+
+Local conversation history and saved notes are stored in the application’s local browser storage. They are **not encrypted**.
+
+Future versions may introduce optional cloud-model routes. If that happens, the README and interface should identify which requests remain local and which requests are sent to an external service.
+
+The project therefore does not make a blanket claim that all future Ø-CREW activity will always remain entirely on-device.
 
 ## Run the prototype
 
@@ -56,7 +106,7 @@ This is a source-code release, not a packaged installer. Windows is the developm
 
 The five characters and Ø-House should appear. Click a character, choose **Try my job**, and press **Send**.
 
-Installation and model downloads need internet access. After setup, inference uses your own Ollama server at `http://127.0.0.1:11434`; prompts are not sent to a cloud AI by this application. Performance depends on your hardware and model load time. Try one character at a time for the first demo.
+After setup, the current prototype performs model inference through your local Ollama server. Performance depends on your hardware and model load time. Try one character at a time for the first demo.
 
 Opening `index.html` directly in a browser or hosting it on GitHub Pages does not provide the Electron desktop or AI bridge.
 
@@ -99,8 +149,14 @@ tests/verify.cjs     Behaviour checks using a simulated bridge
 
 ## Project status and licensing
 
-Early prototype: no installer, automatic updates, or production support commitment yet. The Electron dependency is retained from the working prototype; dependency updates and cross-machine testing remain release work.
+Early prototype: no installer, automatic updates, or production support commitment yet. Dependency updates, cross-machine testing, and future model-routing experiments remain release work.
 
-The project currently retains its existing **`UNLICENSED`** status. Publishing the source does not select an open-source licence or grant a separate artwork licence. Third-party dependencies and Qwen retain their own terms. See [the asset inventory](docs/ASSETS.md) for the included PNG files.
+This repository is publicly viewable for demonstration, learning, and portfolio purposes, but it is **not open source**.
+
+The project is **UNLICENSED** and all original project materials remain protected. Public availability does not grant permission to redistribute, publish modified versions, sublicense, sell, monetise, or otherwise commercially exploit the source code, characters, names, artwork, animations, or documentation.
+
+See [LICENSE](LICENSE) for the full notice and [the asset inventory](docs/ASSETS.md) for the included PNG files.
+
+Third-party dependencies and models retain their own licences and terms.
 
 Built around a simple principle: **Steward, not emperor.**
