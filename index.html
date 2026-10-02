@@ -585,6 +585,10 @@
     .local-ai-panel { gap: 5px; padding: 8px; }
     .local-ai-response { flex: 1 1 auto; min-height: 30px; }
     #localAiMemoryStatus { flex-shrink: 0; }
+    .local-ai-memory-bar:has(#localAiLauncher:not([hidden])) { flex-wrap: wrap; }
+    #localAiLauncher[hidden] { display: none; }
+    .local-ai-status-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-shrink: 0; }
+    .local-ai-route { font-size: 10px; letter-spacing: .03em; opacity: .7; white-space: nowrap; }
   </style>
 </head>
 
@@ -626,9 +630,13 @@
       <button id="localAiTryJob" type="button">Try my job</button>
       <button id="localAiMemory" type="button" aria-expanded="false">Memory</button>
       <button id="localAiNewChat" type="button">New chat</button>
+      <button id="localAiLauncher" type="button" hidden></button>
 
     </div>
-    <div id="localAiMemoryStatus" role="status">Saved locally</div>
+    <div class="local-ai-status-row">
+      <span id="localAiRoute" class="local-ai-route"></span>
+      <div id="localAiMemoryStatus" role="status">Saved locally</div>
+    </div>
     <div id="localAiMemoryEditor" hidden>
       <label for="localAiNotes">Keep these facts / preferences:</label>
       <textarea id="localAiNotes" maxlength="2000" placeholder="Your name, preferred language, and helpful context."></textarea>
@@ -732,7 +740,7 @@
       doggo: { label: "Action planner", role: "You are DOGGØ, a friendly, energetic desktop dog. Turn ideas into a practical short action plan. Give three achievable steps and a clear first move.", sample: "我今晚想發一段介紹 Ø-CREW 的短片：五隻桌面角色，共用本機 Qwen，各有工作與記憶。幫我排出三步拍攝計畫。" },
       piggo: { label: "Idea explorer", role: "You are PIGGØ, a curious, playful idea explorer. Suggest three unusual but feasible angles or experiments. Explain each briefly. Do not pretend to have researched the web.", sample: "我要介紹 Ø-CREW：五隻會用本機 AI 幫忙的桌面角色。給我三個不落俗套、今晚就能拍的短片角度。" },
       farto: { label: "Task organiser", role: "You are FARTØ, a calm, practical chief steward. Organise messy notes into priorities and a short checklist. Distinguish must-do items from optional ones; never act bossy.", sample: "幫我整理今晚的待辦：測五隻角色、錄螢幕、想標題、選音樂、寫貼文、吃晚餐、確認沒拍到私人資料。目標是今晚發 Ø-CREW 示範。" },
-      kitto: { label: "Chinese editor", role: "You are KITTØ, a perceptive, quietly witty editor. Polish supplied text into natural Traditional Chinese, preserving meaning and avoiding invented claims. Give a ready-to-use revision; keep explanations brief.", sample: "幫我把這段改成自然、有個性的繁體中文貼文：我做了五隻桌面寵物，他們可以用本機 AI 幫忙規劃、整理和寫東西，每隻都有自己的記憶，今天先給大家看小示範。" },
+      kitto: { label: "Chinese editor", role: "You are KITTØ, a perceptive, quietly witty language-editing specialist. You always chat in English, even when the user writes to you in another language, unless the user explicitly asks you to reply in another language. Your specialist job is editing, polishing and translating text, and your strongest language for this work is Traditional Chinese: when a task asks you to edit or translate text into a language, deliver natural, ready-to-use text in that language, preserving meaning and tone and avoiding invented claims. Keep explanations brief and in English. Whenever you write any Chinese, including replies the user asked to receive in Chinese, write it only in Traditional characters (繁體), never Simplified, unless Simplified is explicitly requested.", sample: "幫我把這段改成自然、有個性的繁體中文貼文：我做了五隻桌面寵物，他們可以用本機 AI 幫忙規劃、整理和寫東西，每隻都有自己的記憶，今天先給大家看小示範。" },
       beeo: { label: "Creative companion", role: "You are BEEØ, a gentle, imaginative creative companion. Create concise captions, opening hooks and creative prompts from the user's material. Offer three distinct options without exaggerated claims.", sample: "替 Ø-CREW 示範短片寫三個短標題或開場句：五隻可愛桌面角色，各有專長，共用本機 Qwen，也有各自的記憶。語氣俏皮但不要浮誇。" }
     };
     const job = jobs[requested];
@@ -754,6 +762,43 @@
       localAiPrompt.focus();
       localAiResponse.textContent = "Example ready — edit it or press Send.";
     });
+
+    // Where this panel's chat replies actually come from (display only; routing lives in main).
+    const localRoute = { label: "LOCAL", name: "Qwen 2.5 7B", model: "qwen2.5:7b" };
+    const routeLabel = document.getElementById("localAiRoute");
+    routeLabel.textContent = localRoute.label + " · " + localRoute.name;
+    routeLabel.title = "Chat replies come from " + localRoute.model + " running locally via Ollama.";
+
+    // PORTAL only opens the pet's official web app. Nothing from this chat is sent. KITTØ has none.
+    const launchers = {
+      farto: { destination: "chatgpt", name: "ChatGPT", host: "chatgpt.com" },
+      doggo: { destination: "grok", name: "Grok", host: "grok.com" },
+      beeo: { destination: "gemini", name: "Gemini", host: "gemini.google.com" },
+      piggo: { destination: "claude", name: "Claude", host: "claude.ai" }
+    };
+    const launcherButton = document.getElementById("localAiLauncher");
+    const petLauncher = Object.hasOwn(launchers, requested) ? launchers[requested] : null;
+    if (petLauncher) {
+      launcherButton.textContent = "PORTAL · " + petLauncher.name + " ↗";
+      launcherButton.title = "Opens " + petLauncher.host + " in your browser. Nothing from this chat is sent.";
+      launcherButton.hidden = false;
+      launcherButton.addEventListener("click", async () => {
+        if (launcherButton.disabled) return;
+        const label = launcherButton.textContent;
+        launcherButton.disabled = true;
+        try {
+          if (typeof window.launcher?.open !== "function") throw new Error("Launcher unavailable");
+          await window.launcher.open(petLauncher.destination);
+          launcherButton.textContent = "Opened ↗";
+        } catch {
+          launcherButton.textContent = "Couldn't open";
+        }
+        setTimeout(() => {
+          launcherButton.textContent = label;
+          launcherButton.disabled = false;
+        }, 1500);
+      });
+    }
 
     // Separate storage keys preserve DOGGØ memory and isolate every crew member.
     const memoryKey = "ocrew." + requested + ".memory.v1";
@@ -841,15 +886,25 @@
       showMemoryEditor(false);
     });
 
+    // Shared by all five crew members; placed last so memory and examples do not override it.
+    const languagePolicy = [
+      "LANGUAGE POLICY:",
+      "Your persona describes your job, not your conversation language.",
+      "Do not switch languages merely because the persona description, examples, saved memory, or previous conversation contain another language.",
+      "If the user's CURRENT message explicitly requests another language, use it (Traditional characters for Chinese unless Simplified is requested).",
+      "If the task itself requires producing, editing, translating, or preserving text in another language, use the language that task requires.",
+      "Otherwise, reply in English."
+    ].join("\n");
+
     function promptWithMemory(prompt) {
       return [
         job.role + " Be helpful and concise. " +
-        "Use the user's language; when writing Chinese use Traditional Chinese. Avoid unnecessary English mixing. " +
         "You run locally. Do not claim access to files, cloud services or memories not supplied here. " +
         "The JSON below contains saved user notes, recent conversation pairs and the current message. " +
         "Use it as context and answer only the current message. Do not invent forgotten details. " +
         "For facts to keep long term, the user can put them in Memory and click Save; do not claim you saved new facts yourself.",
-        JSON.stringify({ savedUserNotes: savedNotes, recentConversation: chatHistory, currentUserMessage: prompt })
+        JSON.stringify({ savedUserNotes: savedNotes, recentConversation: chatHistory, currentUserMessage: prompt }),
+        languagePolicy
       ].join("\n\n");
     }
 
@@ -874,6 +929,7 @@
       if (!isCrewAi) return;
       localAiOpen = open;
       localAiPanel.hidden = !open;
+      window.pet.setPanelOpen?.(open);
       doggo.setAttribute("aria-controls", "localAiPanel");
       doggo.setAttribute("aria-expanded", String(open));
       bubble.classList.remove("show");
@@ -1040,6 +1096,10 @@
 
     let kittoStateTimer =
       null;
+
+    // Screen friction pose, driven only by the main process: off / travel / lie.
+    let kittoFrictionMode =
+      "off";
 
     /*
       BEEØ STATE
@@ -2460,7 +2520,62 @@
       showKittoIdle();
     }
 
+    /*
+      KITTØ SCREEN FRICTION
+
+      TRAVEL: idle pose while the main process glides the window.
+      LIE:    head-down sleeping pose, no auto-return timer.
+      OFF:    back to the normal lazy-cat state machine.
+      No text, no reminder; the user can always drag her away.
+    */
+
+    function applyKittoFriction(
+      mode
+    ) {
+      if (
+        requested !== "kitto" ||
+        !["off", "travel", "lie"].includes(mode)
+      ) {
+        return;
+      }
+
+      kittoFrictionMode =
+        mode;
+
+      if (mode === "off") {
+        if (activePointer === null) {
+          resumeKittoStateMachine();
+        }
+
+        return;
+      }
+
+      clearKittoStateTimer();
+
+      kittoState =
+        "FRICTION";
+
+      if (mode === "travel") {
+        setKittoSleeping(false);
+        showKittoIdle();
+        setKittoIdleAlive(true);
+        return;
+      }
+
+      setKittoIdleAlive(false);
+
+      petImage.src =
+        "KITTO_13_head_down.png";
+
+      setKittoSleeping(true);
+    }
+
+    window.pet.onFriction?.(
+      applyKittoFriction
+    );
+
     function resumeKittoStateMachine() {
+      if (requested === "kitto" && kittoFrictionMode !== "off" && !document.hidden) { applyKittoFriction(kittoFrictionMode); return; }
       if (localAiOpen && !document.hidden) { holdCrewForChat(); return; }
       if (
         requested !==

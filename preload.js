@@ -27,6 +27,22 @@ contextBridge.exposeInMainWorld("pet", {
         callback(direction);
       }
     );
+  },
+
+  setPanelOpen: (open) => {
+    ipcRenderer.send(
+      "pet:panel",
+      open === true
+    );
+  },
+
+  onFriction: (callback) => {
+    ipcRenderer.on(
+      "pet:friction",
+      (_event, mode) => {
+        callback(mode);
+      }
+    );
   }
 });
 
@@ -39,6 +55,15 @@ contextBridge.exposeInMainWorld("ai", {
     return ipcRenderer.invoke(
       "ai:ask-local",
       prompt
+    );
+  }
+});
+
+contextBridge.exposeInMainWorld("launcher", {
+  open: (destination) => {
+    return ipcRenderer.invoke(
+      "launcher:open",
+      destination
     );
   }
 });

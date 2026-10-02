@@ -7,72 +7,43 @@
 
 const path = require("path");
 
+const {
+  routeAiRequest
+} = require("./providers/router");
+
+const {
+  createLauncherHandler
+} = require("./providers/launcher");
+
+const {
+  STATES: FRICTION,
+  KITTO_FRICTION_CONFIG,
+  createKittoFriction,
+  centreTarget,
+  stepToward
+} = require("./crew/kitto-friction");
+
+/*
+  --------------------------------
+  SINGLE INSTANCE
+  --------------------------------
+
+  A second launch quits quietly and
+  leaves the running crew untouched.
+*/
+
+const hasInstanceLock =
+  app.requestSingleInstanceLock();
+
+if (!hasInstanceLock) {
+  app.quit();
+}
+
 /*
   --------------------------------
   LOCAL AI
   --------------------------------
 */
-
-async function askLocalModel(prompt) {
-  const safePrompt =
-    String(prompt ?? "").trim();
-
-  if (!safePrompt) {
-    throw new Error(
-      "Prompt is empty."
-    );
-  }
-
-  const controller =
-    new AbortController();
-
-  const timeout =
-    setTimeout(
-      () => controller.abort(),
-      60000
-    );
-
-  try {
-    const response =
-      await fetch(
-        "http://127.0.0.1:11434/api/generate",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-            model: "qwen2.5:7b",
-            prompt: safePrompt,
-            stream: false
-          }),
-
-          signal:
-            controller.signal
-        }
-      );
-
-    if (!response.ok) {
-      throw new Error(
-        `Ollama HTTP ${response.status}`
-      );
-    }
-
-    const data =
-      await response.json();
-
-    return String(
-      data?.response ?? ""
-    ).trim();
-  }
-
-  finally {
-    clearTimeout(timeout);
-  }
-}
 
 ipcMain.handle(
   "ai:ask-local",
@@ -93,13 +64,317 @@ ipcMain.handle(
       );
     }
 
-    return askLocalModel(prompt);
+    noteCrewInteraction();
+
+    return routeAiRequest({
+      characterId:
+        crewCharacters.get(
+          senderWindow
+        ),
+
+      prompt
+    });
   }
 );
 const crewWindows = [];
+const crewCharacters = new WeakMap();
+
+/*
+  --------------------------------
+  LAUNCHER
+  --------------------------------
+*/
+
+const openLauncher =
+  createLauncherHandler({
+    getSenderWindow:
+      (sender) =>
+        BrowserWindow.fromWebContents(
+          sender
+        ),
+
+    isCrewWindow:
+      (win) =>
+        crewWindows.includes(win),
+
+    getCharacter:
+      (win) =>
+        crewCharacters.get(win)
+  });
+
+ipcMain.handle(
+  "launcher:open",
+  async (event, destination) => {
+    await openLauncher(
+      event,
+      destination
+    );
+
+    noteCrewInteraction();
+  }
+);
 
 let houseWindow = null;
 let crewHidden = false;
+
+/*
+  --------------------------------
+  KITTØ SCREEN FRICTION
+  --------------------------------
+
+  Session = Ø-CREW's own interactions
+  only (pet click/drag, chat send,
+  portal, house). Nothing else on the
+  computer is observed. In memory only;
+  a restart begins clean.
+*/
+
+const kittoFriction =
+  createKittoFriction({
+    ...KITTO_FRICTION_CONFIG,
+    now: Date.now
+  });
+
+const activeGestureWindows =
+  new Set();
+
+let kittoPanelOpen = false;
+let frictionTravel = null;
+let frictionDisplayId = null;
+
+function noteCrewInteraction() {
+  kittoFriction.noteInteraction();
+}
+
+function findKittoWindow() {
+  return crewWindows.find(
+    (win) =>
+      !win.isDestroyed() &&
+      crewCharacters.get(win) === "kitto"
+  ) ?? null;
+}
+
+function sendKittoFriction(mode) {
+  const win =
+    findKittoWindow();
+
+  if (win) {
+    win.webContents.send(
+      "pet:friction",
+      mode
+    );
+  }
+}
+
+function isKittoFrictionOn() {
+  const state =
+    kittoFriction.getState();
+
+  return (
+    state === FRICTION.TRAVEL ||
+    state === FRICTION.LYING
+  );
+}
+
+function stopFrictionTravel() {
+  if (!frictionTravel) {
+    return;
+  }
+
+  clearInterval(
+    frictionTravel.timer
+  );
+
+  frictionTravel = null;
+}
+
+// "cancel" = user intervened (cooldown); "reset" = clean slate.
+function endKittoFriction(how) {
+  const wasOn =
+    isKittoFrictionOn();
+
+  stopFrictionTravel();
+  frictionDisplayId = null;
+
+  if (how === "cancel") {
+    kittoFriction.cancel();
+  }
+
+  else {
+    kittoFriction.reset();
+  }
+
+  if (wasOn) {
+    sendKittoFriction("off");
+  }
+}
+
+function cancelKittoFrictionByUser() {
+  if (isKittoFrictionOn()) {
+    endKittoFriction("cancel");
+  }
+}
+
+function isKittoEligible(win) {
+  return Boolean(
+    win &&
+    !win.isDestroyed() &&
+    win.isVisible() &&
+    !crewHidden &&
+    !activeGestureWindows.has(win) &&
+    !kittoPanelOpen
+  );
+}
+
+function updateFrictionTravel() {
+  const travel =
+    frictionTravel;
+
+  if (!travel) {
+    return;
+  }
+
+  if (travel.win.isDestroyed()) {
+    endKittoFriction("reset");
+    return;
+  }
+
+  const time =
+    Date.now();
+
+  const dt =
+    Math.min(
+      0.2,
+      (time - travel.lastTime) / 1000
+    );
+
+  travel.lastTime = time;
+
+  const next =
+    stepToward(
+      travel,
+      travel.target,
+      KITTO_FRICTION_CONFIG.speedPxPerSec * dt
+    );
+
+  travel.x = next.x;
+  travel.y = next.y;
+
+  travel.win.setBounds({
+    x: Math.round(next.x),
+    y: Math.round(next.y),
+    width: travel.width,
+    height: travel.height
+  });
+
+  if (next.arrived) {
+    stopFrictionTravel();
+    kittoFriction.arrived();
+    sendKittoFriction("lie");
+  }
+}
+
+function startFrictionTravel(win) {
+  stopFrictionTravel();
+
+  const bounds =
+    win.getBounds();
+
+  // Fixed at the start: KITTØ never crosses monitors.
+  const display =
+    screen.getDisplayMatching(
+      bounds
+    );
+
+  frictionDisplayId =
+    display.id;
+
+  frictionTravel = {
+    win,
+
+    target:
+      centreTarget(
+        display.workArea,
+        bounds
+      ),
+
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
+    lastTime: Date.now(),
+    timer: null
+  };
+
+  sendKittoFriction("travel");
+
+  frictionTravel.timer =
+    setInterval(
+      updateFrictionTravel,
+      60
+    );
+}
+
+function tickKittoFriction() {
+  const win =
+    findKittoWindow();
+
+  const before =
+    kittoFriction.getState();
+
+  const after =
+    kittoFriction.tick({
+      eligible:
+        isKittoEligible(win)
+    });
+
+  if (
+    before !== FRICTION.TRAVEL &&
+    after === FRICTION.TRAVEL
+  ) {
+    startFrictionTravel(win);
+  }
+}
+
+// Safe over clever: a changed display ends friction.
+function handleFrictionDisplayChange(
+  _event,
+  display
+) {
+  if (
+    frictionDisplayId !== null &&
+    display.id === frictionDisplayId
+  ) {
+    endKittoFriction("reset");
+  }
+}
+
+ipcMain.on(
+  "pet:panel",
+  (event, open) => {
+    const win =
+      BrowserWindow.fromWebContents(
+        event.sender
+      );
+
+    if (
+      !win ||
+      !crewWindows.includes(win) ||
+      event.senderFrame !==
+        event.sender.mainFrame ||
+      crewCharacters.get(win) !== "kitto"
+    ) {
+      return;
+    }
+
+    kittoPanelOpen =
+      open === true;
+
+    if (kittoPanelOpen) {
+      cancelKittoFrictionByUser();
+    }
+  }
+);
 
 function createPetWindow(
   character,
@@ -145,6 +420,7 @@ function createPetWindow(
   );
 
   crewWindows.push(win);
+  crewCharacters.set(win, character);
 
 
 
@@ -199,6 +475,7 @@ function createPetWindow(
     );
 
     gesture = null;
+    activeGestureWindows.delete(win);
   }
 
   function handleGesture(
@@ -236,6 +513,13 @@ function createPetWindow(
           updateGesture,
           16
         );
+
+      activeGestureWindows.add(win);
+
+      // Any grab ends friction at once; the drag itself stays normal.
+      if (character === "kitto") {
+        cancelKittoFrictionByUser();
+      }
     }
 
     else if (
@@ -248,6 +532,19 @@ function createPetWindow(
         !gesture.dragged;
 
       stopGesture();
+
+      // Dragging KITTØ somewhere is intentional placement: fresh grace period.
+      // (A grab during TRAVEL/LYING already cancelled into COOLDOWN, so this is a no-op then.)
+      if (
+        character === "kitto" &&
+        !clicked
+      ) {
+        kittoFriction.restartSession();
+      }
+
+      else {
+        noteCrewInteraction();
+      }
 
       if (clicked) {
         win.webContents.send(
@@ -488,11 +785,19 @@ function createPetWindow(
     stopGesture
   );
 
+  function resetKittoForWindow() {
+    if (character === "kitto") {
+      kittoPanelOpen = false;
+      endKittoFriction("reset");
+    }
+  }
+
   win.webContents.on(
     "did-start-loading",
     () => {
       stopGesture();
       stopRoam();
+      resetKittoForWindow();
     }
   );
 
@@ -501,6 +806,7 @@ function createPetWindow(
     () => {
       stopGesture();
       stopRoam();
+      resetKittoForWindow();
 
       ipcMain.removeListener(
         "pet:gesture",
@@ -783,13 +1089,41 @@ ipcMain.on(
     }
 
     toggleCrew();
+
+    // Hidden time never counts; showing the crew is a fresh interaction.
+    if (crewHidden) {
+      endKittoFriction("reset");
+    }
+
+    else {
+      noteCrewInteraction();
+    }
   }
 );
 
 app.whenReady().then(
   () => {
+    if (!hasInstanceLock) {
+      return;
+    }
+
     createCrew();
     createHouse();
+
+    setInterval(
+      tickKittoFriction,
+      1000
+    );
+
+    screen.on(
+      "display-removed",
+      handleFrictionDisplayChange
+    );
+
+    screen.on(
+      "display-metrics-changed",
+      handleFrictionDisplayChange
+    );
 
     app.on(
       "activate",

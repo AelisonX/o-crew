@@ -1,12 +1,12 @@
 # Ø-CREW
 
-**Five tiny desktop companions. Five useful jobs. One local AI — for now.**
+**Five tiny desktop companions. Five useful jobs. One local AI, plus optional web portals.**
 
 An early Windows desktop prototype by AISØN: animated characters that roam, rest, respond to clicks, and help with small writing and planning tasks using Qwen through Ollama.
 
-Ø-CREW is being explored as a **local-first hybrid AI system**: routine tasks should use the smallest sufficient model where practical, while more capable cloud models may later be added as explicit, visible routes for tasks that genuinely need them.
+Ø-CREW is being explored as a **local-first hybrid AI system**: routine tasks should use the smallest sufficient model where practical, while more capable services stay explicit and visible.
 
-The current prototype is still fully local. Hybrid routing is a design direction, not a feature claim.
+Today that means: every in-app chat runs on a local model, and four characters can also open an official AI website in your normal browser. There is no cloud API integration.
 
 <p align="center">
   <img src="DOGG%C3%98.png" width="130" alt="DOGGØ" />
@@ -18,15 +18,17 @@ The current prototype is still fully local. Hybrid routing is a design direction
 
 ## Meet the crew
 
-| Character | Job | Try asking |
-| --- | --- | --- |
-| DOGGØ | Action planner | “Turn my idea into three practical steps.” |
-| PIGGØ | Idea explorer | “Give me three unusual angles for this video.” |
-| FARTØ | Task organiser | “Sort these messy notes into priorities.” |
-| KITTØ | Traditional Chinese editor | “Polish this paragraph without changing its meaning.” |
-| BEEØ | Creative companion | “Write three playful captions for this.” |
+| Character | Job | Try asking | Web portal |
+| --- | --- | --- | --- |
+| DOGGØ | Action planner | “Turn my idea into three practical steps.” | Grok |
+| PIGGØ | Idea explorer | “Give me three unusual angles for this video.” | Claude |
+| FARTØ | Task organiser | “Sort these messy notes into priorities.” | ChatGPT |
+| KITTØ | Language editor (Traditional Chinese specialist) | “Polish this paragraph without changing its meaning.” | none |
+| BEEØ | Creative companion | “Write three playful captions for this.” | Gemini |
 
 Each character has a distinct prompt and its own conversation history and saved notes. All five currently use the **same `qwen2.5:7b` model**; these are role-based companions, not five separately trained models.
+
+Replies default to English. Ask for another language in your message (for example “reply in Chinese”) and the character should follow it. Chinese replies are instructed to use Traditional characters unless you ask for Simplified, although the local 7B model occasionally slips into Simplified in casual chat. Editing or translation tasks use whatever language the task needs.
 
 ## What works today
 
@@ -35,11 +37,44 @@ Each character has a distinct prompt and its own conversation history and saved 
 - **Try my job** prepares an editable example. Press **Send** to run it.
 - Local Qwen replies with a thinking indicator and a scrollable response.
 - Separate local memory for each character, retained across normal app restarts.
+- Each panel shows where its chat replies come from: **LOCAL · Qwen 2.5 7B**.
+- Four characters have a **PORTAL** button that opens an official AI website (see below).
 - **Ø-House** hides or shows the crew together.
+- **KITTØ screen friction** (experimental, see below).
 
-This version works from the text you provide. It does **not** browse the web, read your files, control other apps, monitor social feeds, or automatically pass tasks between characters.
+This version works from the text you provide. It does **not** read your files, control other apps, monitor social feeds, or automatically pass tasks between characters.
 
-There is currently **no cloud-model fallback or cloud-model routing**.
+### Local AI and web portals
+
+These are two different things:
+
+**Local AI — all five characters.** Every message you send in a character's panel goes to your own Ollama server and is answered by `qwen2.5:7b`. The panel label reads **LOCAL · Qwen 2.5 7B**.
+
+**Web portals — four characters.** A **PORTAL** button opens an official AI website in your normal browser:
+
+| Character | Button | Opens |
+| --- | --- | --- |
+| FARTØ | PORTAL · ChatGPT ↗ | `https://chatgpt.com/` |
+| DOGGØ | PORTAL · Grok ↗ | `https://grok.com/` |
+| BEEØ | PORTAL · Gemini ↗ | `https://gemini.google.com/` |
+| PIGGØ | PORTAL · Claude ↗ | `https://claude.ai/` |
+| KITTØ | — | no portal |
+
+A portal is only a shortcut. **Opening a portal does not send the current Ø-CREW conversation, memory, or notes to that service.** Ø-CREW does not log in for you, read the website, capture its replies, or use paid model APIs. Anything you do on that website happens in your browser, under that service's own account and terms.
+
+The app opens only these fixed addresses, and each character can open only its own. There is currently **no direct cloud-model API routing**.
+
+### KITTØ screen friction (experimental)
+
+After a long active Ø-CREW session, KITTØ may slowly move to the centre of its current display and lie down.
+
+- An "active session" is built only from your interactions with Ø-CREW itself: clicking or dragging a character, sending a chat message, opening a portal, or showing the crew with Ø-House.
+- Current defaults: **3-hour active-session threshold**, **30-minute inactivity reset**, **30-minute cooldown** after you move KITTØ away.
+- The behaviour is deterministic and rule-based. No language model decides when it happens.
+- Click or drag KITTØ away at any time. It stays where you put it and does not come straight back. Dragging KITTØ somewhere during normal use also restarts its full grace period.
+- There is no message, reminder, notification, or lockout. KITTØ is just in the way.
+
+This is a playful design experiment, not health advice or a productivity recommendation. The design principle is **friction ≠ authority**: a small inconvenience you can always dismiss, never a rule.
 
 ## Design direction: local-first hybrid AI
 
@@ -49,9 +84,9 @@ The design direction is simple:
 
 > **Use the smallest sufficient intelligence for the task.**
 
-Routine, lightweight, or privacy-sensitive tasks may stay on local models. Tasks that genuinely benefit from stronger remote models may later be routed to optional cloud services.
+Routine, lightweight, or privacy-sensitive tasks stay on local models. The current web portals are a deliberately simple first step: they hand you over to another service visibly, rather than routing your chat there behind the scenes.
 
-If cloud routing is introduced, the intended design is to make that routing visible rather than silently treating every model as interchangeable.
+Direct optional cloud-model routes (through official APIs) may be explored later. If they are added, the intended design is to keep routing visible rather than silently treating every model as interchangeable.
 
 For example:
 
@@ -62,28 +97,28 @@ local model
 
 complex task
     ↓
-optional cloud model
+optional, visible external route
 ```
 
-This is a design goal, not a claim about functionality in the current prototype.
+Direct API routing is future work, not a feature of the current prototype.
 
 ## Privacy and data boundaries
 
-The current prototype sends AI requests only to the user’s own Ollama server at:
+In-app chat requests are sent only to the user's own Ollama server at:
 
 ```text
 http://127.0.0.1:11434
 ```
 
-The application itself does not currently send prompts to a cloud AI service.
+The application itself does not send prompts, conversation history, or saved notes to a cloud AI service. Portal buttons open a fixed official website in your default browser; nothing from Ø-CREW is attached.
 
-Installation and model downloads still require internet access, and third-party software such as Node.js, Electron, Ollama, operating-system services, or future optional integrations may have their own network behaviour and terms.
+KITTØ screen friction observes only Ø-CREW's own interactions. It does **not** monitor global keyboard input, global mouse activity, screen contents, active applications or windows, operating-system idle time, files, the camera, or the microphone. Its session state lives in memory only and resets when the app restarts.
 
-Local conversation history and saved notes are stored in the application’s local browser storage. They are **not encrypted**.
+Installation and model downloads still require internet access, and third-party software such as Node.js, Electron, Ollama, your browser, the websites opened by portals, and operating-system services have their own network behaviour and terms.
 
-Future versions may introduce optional cloud-model routes. If that happens, the README and interface should identify which requests remain local and which requests are sent to an external service.
+Local conversation history and saved notes are stored in the application's local browser storage. They are **not encrypted**.
 
-The project therefore does not make a blanket claim that all future Ø-CREW activity will always remain entirely on-device.
+If direct cloud-model routes are introduced later, the README and interface should identify which requests remain local and which requests are sent to an external service. The project therefore does not make a blanket claim that all future Ø-CREW activity will always remain entirely on-device.
 
 ## Run the prototype
 
@@ -108,16 +143,18 @@ The five characters and Ø-House should appear. Click a character, choose **Try 
 
 After setup, the current prototype performs model inference through your local Ollama server. Performance depends on your hardware and model load time. Try one character at a time for the first demo.
 
+Only one copy of Ø-CREW runs at a time: starting it again while it is open exits quietly instead of creating a second, overlapping crew.
+
 Opening `index.html` directly in a browser or hosting it on GitHub Pages does not provide the Electron desktop or AI bridge.
 
 ## Memory controls
 
 - Successful exchanges are saved automatically, up to **12 recent pairs** within a **16,000-character history budget**. Older context is dropped as the limit is reached.
 - **Memory → Save** stores up to 2,000 characters of facts/preferences you enter explicitly. Chatting does not automatically extract permanent facts.
-- **New chat** clears that character’s recent exchanges and keeps its saved notes.
-- **Forget all** clears that character’s chat and saved notes; other characters are unaffected.
+- **New chat** clears that character's recent exchanges and keeps its saved notes.
+- **Forget all** clears that character's chat and saved notes; other characters are unaffected.
 
-Memory uses the app’s local browser storage, outside this repository. It is not encrypted or synchronised between computers. Moving the app to another location or clearing its browser profile can affect whether previous storage is available. A storage error is shown in the panel instead of silently claiming the data was saved.
+Memory uses the app's local browser storage, outside this repository. It is not encrypted or synchronised between computers. Moving the app to another location or clearing its browser profile can affect whether previous storage is available. A storage error is shown in the panel instead of silently claiming the data was saved.
 
 ## Troubleshooting
 
@@ -126,8 +163,11 @@ Memory uses the app’s local browser storage, outside this repository. It is no
 | “Could not reach local Qwen” | Keep Ollama running; use `ollama list` to check that `qwen2.5:7b` is installed. If no Ollama server is running, start the Ollama app or use `ollama serve`. |
 | First response is slow | Loading a 7B model can take time. Responses time out after 60 seconds; retry after the model has loaded. |
 | “Local AI is unavailable” | Start with `npm start`, not by double-clicking the HTML. Keep `preload.js` beside `main.js`. |
+| Portal button shows “Couldn't open” | Check that a default web browser is set in your operating system. |
+| `npm start` returns immediately and no crew appears | Ø-CREW is probably already running; look for the existing crew or Ø-House. |
+| KITTØ is lying in the middle of the screen | Click or drag KITTØ away. |
 | Missing character images | Extract the whole project and preserve PNG filenames, including `Ø` and capitalisation. |
-| Memory does not persist | Check the panel’s save status and use the same app installation/profile. |
+| Memory does not persist | Check the panel's save status and use the same app installation/profile. |
 | Need to quit | Close the terminal process with **Ctrl+C**. This prototype has no tray-menu quit button. |
 
 ## Checks and project layout
@@ -136,15 +176,23 @@ Memory uses the app’s local browser storage, outside this repository. It is no
 npm test
 ```
 
-The checks simulate role prompts, isolated memory, reloads, request errors, duplicate submissions, dismissal, and drag/visibility event handling. They do not prove a real Ollama response, visual layout, or Electron window movement; see [the manual checklist](docs/TESTING.md).
+Runs 54 automated checks with Node's built-in test runner; no extra test packages are needed. They cover local routing for all five characters, the portal allow-list and its sender checks, the visible LOCAL/PORTAL labels, single-instance startup, and the KITTØ screen-friction state machine and screen-centre maths using a simulated clock. Boundary checks confirm the friction code does not use input hooks, screen capture, idle-time monitoring, notifications, or forced focus.
+
+They do not prove a real Ollama response, visual layout, real browser launches, or real Electron window movement; see [the manual checklist](docs/TESTING.md).
 
 ```text
-index.html          Characters, animations, AI panels and local memory
-main.js             Electron windows, dragging, roaming and local Ollama requests
-preload.js          Small renderer-to-Electron bridge
-house.html          Show/hide control
-*.png               Character artwork and animation frames referenced by the app
-tests/verify.cjs     Behaviour checks using a simulated bridge
+index.html                    Characters, animations, AI panels, local memory, route labels
+main.js                       Electron windows, dragging, roaming, IPC, single-instance lock, KITTØ friction movement
+preload.js                    Small renderer-to-Electron bridge
+house.html                    Show/hide control
+providers/router.js           Routes each character's chat to its provider (currently all LOCAL)
+providers/local-ollama.js     Local Ollama / qwen2.5:7b requests
+providers/launcher.js         Portal allow-list and per-character portal checks
+crew/kitto-friction.js        KITTØ screen-friction state machine (no Electron, no timers, no storage)
+test/                         Automated checks (node --test)
+docs/TESTING.md               Manual demo checklist
+docs/ASSETS.md                Included artwork and reuse restrictions
+*.png                         Character artwork and animation frames referenced by the app
 ```
 
 ## Project status and licensing
