@@ -3088,6 +3088,53 @@
     );
 
     /*
+      MESSAGE BUS v0.1 — receiver-owned bubble wording.
+      A sender can only pick a key; each pet owns its own words.
+      No free text arrives over the bus, and no LLM is involved.
+    */
+
+    const bubbleTemplates = {
+      doggo: {
+        USER_SAID_HI: "Woof! KITTØ says you said hi."
+      }
+    };
+
+    let busBubbleTimer = null;
+
+    window.pet.onBusBubble?.((messageKey) => {
+      const own = Object.hasOwn(bubbleTemplates, requested) ? bubbleTemplates[requested] : {};
+
+      if (typeof messageKey !== "string" || !Object.hasOwn(own, messageKey)) {
+        return;
+      }
+
+      const status = bubble.querySelector(".status");
+      status.textContent = own[messageKey];
+      bubble.classList.add("show");
+      bubble.setAttribute("aria-hidden", "false");
+
+      clearTimeout(busBubbleTimer);
+      busBubbleTimer = setTimeout(() => {
+        bubble.classList.remove("show");
+        bubble.setAttribute("aria-hidden", "true");
+        status.textContent = character.message;
+      }, 4000);
+    });
+
+    // Dev-only (`npm start -- --bus-demo`): main adds busDemo=1 to KITTØ's window only.
+    if (requested === "kitto" && new URLSearchParams(window.location.search).get("busDemo") === "1") {
+      window.pet.onToggle(async () => {
+        if (typeof window.crew?.send !== "function") return;
+        try {
+          await window.crew.send({ to: "doggo", type: "REQUEST", intent: "SHOW_OWN_BUBBLE", payload: { messageKey: "USER_SAID_HI" } });
+          await window.crew.send({ to: "doggo", type: "REQUEST", intent: "MOVE_BEEO", payload: {} });
+        } catch {
+          // Demo only; outcomes are recorded and printed by the main process.
+        }
+      });
+    }
+
+    /*
       DRAG
     */
 

@@ -23,6 +23,15 @@ const {
   stepToward
 } = require("./crew/kitto-friction");
 
+const {
+  createMessageBus,
+  createBusSendHandler
+} = require("./crew/message-bus");
+
+// Dev-only: `npm start -- --bus-demo`. Never changes permissions.
+const BUS_DEMO =
+  process.argv.includes("--bus-demo");
+
 /*
   --------------------------------
   SINGLE INSTANCE
@@ -78,6 +87,73 @@ ipcMain.handle(
 );
 const crewWindows = [];
 const crewCharacters = new WeakMap();
+
+/*
+  --------------------------------
+  MESSAGE BUS v0.1
+  --------------------------------
+
+  Authority = can(receiver, capability).
+  The sender is stamped here from its real
+  window and never contributes authority.
+  In-memory only; no UI, no persistence.
+*/
+
+const BUS_ENABLED = true;
+
+const crewBus =
+  createMessageBus({
+    handlers: {
+      // Target is always the acting pet itself; the payload cannot choose it.
+      SHOW_OWN_BUBBLE: (actor, payload) => {
+        const win =
+          crewWindows.find(
+            (candidate) =>
+              !candidate.isDestroyed() &&
+              crewCharacters.get(candidate) === actor
+          );
+
+        if (!win) {
+          throw new Error(
+            "No window for actor."
+          );
+        }
+
+        win.webContents.send(
+          "pet:bus-bubble",
+          payload.messageKey
+        );
+      }
+      // No MOVE_BEEO handler exists in v0.1.
+    },
+
+    onRecord: BUS_DEMO
+      ? (entry) => console.log("[bus]", JSON.stringify(entry))
+      : null
+  });
+
+crewBus.setEnabled(BUS_ENABLED);
+
+ipcMain.handle(
+  "bus:send",
+  createBusSendHandler({
+    bus: crewBus,
+
+    getSenderWindow:
+      (sender) =>
+        BrowserWindow.fromWebContents(
+          sender
+        ),
+
+    isCrewWindow:
+      (win) =>
+        crewWindows.includes(win),
+
+    getCharacter:
+      (win) =>
+        crewCharacters.get(win)
+  })
+);
 
 /*
   --------------------------------
@@ -414,7 +490,12 @@ function createPetWindow(
     ),
     {
       query: {
-        character
+        character,
+
+        // Dev-only demo trigger, KITTØ only, never a permission.
+        ...(BUS_DEMO && character === "kitto"
+          ? { busDemo: "1" }
+          : {})
       }
     }
   );
@@ -544,6 +625,15 @@ function createPetWindow(
 
       else {
         noteCrewInteraction();
+      }
+
+      // A real click observed by main is a fact; only main emits events.
+      if (clicked) {
+        crewBus.emitEvent({
+          from: character,
+          intent: "PET_INTERACTED",
+          payload: {}
+        });
       }
 
       if (clicked) {

@@ -43,6 +43,24 @@ contextBridge.exposeInMainWorld("pet", {
         callback(mode);
       }
     );
+  },
+
+  onBusBubble: (callback) => {
+    ipcRenderer.on(
+      "pet:bus-bubble",
+      (_event, messageKey) => {
+        callback(messageKey);
+      }
+    );
+  }
+});
+
+contextBridge.exposeInMainWorld("crew", {
+  send: (submission) => {
+    return ipcRenderer.invoke(
+      "bus:send",
+      submission
+    );
   }
 });
 

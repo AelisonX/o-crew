@@ -41,6 +41,7 @@ Replies default to English. Ask for another language in your message (for exampl
 - Four characters have a **PORTAL** button that opens an official AI website (see below).
 - **Ø-House** hides or shows the crew together.
 - **KITTØ screen friction** (experimental, see below).
+- **Message Bus v0.1** for governed pet-to-pet requests and events (experimental, see below).
 
 This version works from the text you provide. It does **not** read your files, control other apps, monitor social feeds, or automatically pass tasks between characters.
 
@@ -75,6 +76,20 @@ After a long active Ø-CREW session, KITTØ may slowly move to the centre of its
 - There is no message, reminder, notification, or lockout. KITTØ is just in the way.
 
 This is a playful design experiment, not health advice or a productivity recommendation. The design principle is **friction ≠ authority**: a small inconvenience you can always dismiss, never a rule.
+
+### Message Bus v0.1 (experimental)
+
+A small, rule-based channel for one pet to send another an event or a request.
+
+- **Governed requests and events.** Only a fixed list of intents exists. Events come only from things the app itself observed (for example, a real click on KITTØ).
+- **Receiver-owned capabilities.** A request is allowed only if the *receiving* pet holds the capability for that intent. The sender's capabilities are never part of the decision.
+- **Sender identity is stamped by the main process** from the real app window, never taken from the message.
+- **No free-form agent chat.** Messages carry fixed keys, not text; each pet owns the wording it shows.
+- **No LLM makes permission decisions.** Every decision is recorded in an in-memory log that is not saved.
+
+In normal use the bus is mostly invisible. A developer demo (`npm start -- --bus-demo`) shows one allowed request (DOGGØ shows its own speech bubble) and one denied request (a request to move BEEØ is refused).
+
+**Known boundary.** The message bus enforces request/authority boundaries. The current pet renderers still share one localStorage origin/session, so per-character memory keys are namespaced rather than mechanically isolated. See [the boundary audit](docs/BOUNDARY_AUDIT.md).
 
 ## Design direction: local-first hybrid AI
 
@@ -176,7 +191,7 @@ Memory uses the app's local browser storage, outside this repository. It is not 
 npm test
 ```
 
-Runs 54 automated checks with Node's built-in test runner; no extra test packages are needed. They cover local routing for all five characters, the portal allow-list and its sender checks, the visible LOCAL/PORTAL labels, single-instance startup, and the KITTØ screen-friction state machine and screen-centre maths using a simulated clock. Boundary checks confirm the friction code does not use input hooks, screen capture, idle-time monitoring, notifications, or forced focus.
+Runs 80 automated checks with Node's built-in test runner; no extra test packages are needed. They cover local routing for all five characters, the portal allow-list and its sender checks, the visible LOCAL/PORTAL labels, single-instance startup, the KITTØ screen-friction state machine and screen-centre maths using a simulated clock, and the Message Bus permission, sender-identity, and denial rules. Boundary checks confirm the friction code does not use input hooks, screen capture, idle-time monitoring, notifications, or forced focus.
 
 They do not prove a real Ollama response, visual layout, real browser launches, or real Electron window movement; see [the manual checklist](docs/TESTING.md).
 
@@ -189,9 +204,12 @@ providers/router.js           Routes each character's chat to its provider (curr
 providers/local-ollama.js     Local Ollama / qwen2.5:7b requests
 providers/launcher.js         Portal allow-list and per-character portal checks
 crew/kitto-friction.js        KITTØ screen-friction state machine (no Electron, no timers, no storage)
+crew/capabilities.js          Message Bus capability registry, intents, subscriptions, can(actor, capability)
+crew/message-bus.js           Message Bus: validation, permission check, handlers, in-memory log (no Electron)
 test/                         Automated checks (node --test)
 docs/TESTING.md               Manual demo checklist
 docs/ASSETS.md                Included artwork and reuse restrictions
+docs/BOUNDARY_AUDIT.md        Message Bus v0.1 boundary audit
 *.png                         Character artwork and animation frames referenced by the app
 ```
 
